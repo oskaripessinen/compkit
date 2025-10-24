@@ -1,0 +1,10 @@
+{
+  "name": "compkit-monorepo",
+  "private": true,
+  "dependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "scripts": {
+  "dev": "concurrently \"pnpm --filter frontend dev\" \"pnpm --filter backend dev\""
+}
+}
