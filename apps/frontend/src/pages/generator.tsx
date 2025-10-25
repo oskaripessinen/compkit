@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Header } from "@/components/generator/header";
 import { PromptSection } from "@/components/generator/prompt-section";
 import { SettingsPanel } from "@/components/generator/settings-panel";
-import { Footer } from "@/components/generator/footer";
+import { Footer } from "@/components/home/footer";
 
 import { LiveProvider, LivePreview, LiveEditor, LiveError } from 'react-live';
 import { themes } from 'prism-react-renderer';
