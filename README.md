@@ -109,7 +109,7 @@ npx compkit install modern-buttons-x9k2
 
 ---
 
-## 🔧 Development
+## Development
 
 ```bash
 # Clone the repo
