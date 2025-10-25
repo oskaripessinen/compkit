@@ -130,12 +130,12 @@ npm run dev
 ---
 
 ## Roadmap
-
+- [ ] User authentication
 - [ ] AI component generation
-- [ ] Component preview and live editing
+- [ ] Component preview
 - [ ] Library publishing with unique IDs
 - [ ] CLI for installing libraries (`npx compkit install <id>`)
-- [ ] User authentication and library management
+- [ ] library management
 
 
 

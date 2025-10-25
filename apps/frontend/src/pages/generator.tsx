@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Header } from "@/components/generator/header";
 import { PromptSection } from "@/components/generator/prompt-section";
 import { SettingsPanel } from "@/components/generator/settings-panel";
 import { Footer } from "@/components/home/footer";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 import { LiveProvider, LivePreview, LiveEditor, LiveError } from 'react-live';
 import { themes } from 'prism-react-renderer';
@@ -124,6 +126,15 @@ const Generator = () => {
   const [style, setStyle] = useState("tailwind");
   const [prompt, setPrompt] = useState("");
   const [generatedCode, setGeneratedCode] = useState<string | null>(null);
+  const user = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Ohjaa takaisin etusivulle jos ei kirjautunut
+    if (user === null) {
+      navigate('/');
+    }
+  }, [user, navigate]);
 
   const onGenerate = async () => {
     if (!prompt.trim()) return;
@@ -159,6 +170,10 @@ const Generator = () => {
       setLoading(false);
     }
   };
+
+  if (!user) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
