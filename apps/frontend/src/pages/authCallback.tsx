@@ -21,6 +21,8 @@ export default function AuthCallback() {
           navigate('/?error=no_session');
           return;
         }
+        
+        navigate('/generator');
 
       } catch (error) {
         console.error('Unexpected error in auth callback:', error);
