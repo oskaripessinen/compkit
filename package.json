@@ -9,6 +9,9 @@
     "concurrently": "^9.2.1"
   },
   "scripts": {
-  "dev": "concurrently \"pnpm --filter frontend dev\" \"pnpm --filter backend dev\""
-}
+    "dev": "concurrently \"pnpm --filter frontend dev\" \"pnpm --filter backend dev\""
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19"
+  }
 }

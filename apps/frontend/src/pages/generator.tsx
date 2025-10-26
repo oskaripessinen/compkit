@@ -7,37 +7,66 @@ import { SettingsPanel } from "@/components/generator/settings-panel";
 import { Footer } from "@/components/home/footer";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import { generateComponent, type ApiError } from "@/api/client";
 
 import { LiveProvider, LivePreview, LiveEditor, LiveError } from 'react-live';
 import { themes } from 'prism-react-renderer';
 
-const PreviewCard = ({ generatedCode }: { generatedCode: string | null }) => {
+const PreviewCard = ({ 
+  generatedCode, 
+  components, 
+  selectedComponent, 
+  setSelectedComponent 
+}: { 
+  generatedCode: string | null;
+  components: Array<{ name: string; code: string }>;
+  selectedComponent: number;
+  setSelectedComponent: (index: number) => void;
+}) => {
+  const currentComponent = components[selectedComponent];
+  const displayCode = currentComponent ? currentComponent.code : generatedCode;
+
+  console.log(components);
+
   return (
-    <div className="rounded-2xl border border-border bg-card/70 p-4 backdrop-blur h-full flex flex-col">
-      <div className="mx-1 h-5 mb-6 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-foreground">Preview</h3>
+    <div className="mx-6 flex flex-col rounded-lg border border-border bg-card shadow-sm xl:mx-0">
+      <div className="flex items-center justify-between border-b border-border px-5 py-3">
+        <div className="flex items-center gap-2">
+          <svg className="size-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+          <span className="text-sm font-medium text-foreground">Preview</span>
+        </div>
+       {components.length > 1 && (
+         <div className="flex gap-1">
+           {components.map((comp, index) => (
+             <Button
+               key={index}
+               variant={selectedComponent === index ? "default" : "outline"}
+               size="sm"
+               onClick={() => setSelectedComponent(index)}
+               className="h-7 px-2 text-xs"
+             >
+               {comp.name}
+             </Button>
+           ))}
+         </div>
+       )}
         <Badge variant="secondary" className="text-xs">Live</Badge>
       </div>
-      <div className="flex-1 rounded-lg overflow-hidden border border-border/60 bg-background/70">
-        {generatedCode ? (
-          <LiveProvider code={generatedCode} theme={themes.vsDark}>
-            <div className="h-[400px] p-4 overflow-auto justify-center items-center flex">
-              <LivePreview />
-              <LiveError className="text-red-500 text-xs mt-4" />
-            </div>
+      <div className="flex min-h-64 items-center justify-center p-8 bg-muted/30">
+       {displayCode ? (
+          <LiveProvider 
+           code={displayCode}
+            theme={themes.nightOwl}
+            noInline={false}
+          >
+            <LivePreview />
+            <LiveError className="mt-4 text-sm text-destructive" />
           </LiveProvider>
         ) : (
-          <div className="flex h-[400px] items-center justify-center">
-            <div className="text-center">
-              <div className="mb-3 inline-flex size-12 items-center justify-center rounded-full bg-muted">
-                <svg className="size-6 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-              </div>
-              <p className="text-sm text-muted-foreground">Waiting for generation</p>
-            </div>
-          </div>
+          <p className="text-sm text-muted-foreground">Component preview will appear here</p>
         )}
       </div>
     </div>
@@ -47,71 +76,55 @@ const PreviewCard = ({ generatedCode }: { generatedCode: string | null }) => {
 const CodeCard = ({ generatedCode }: { generatedCode: string | null }) => {
   const [copied, setCopied] = useState(false);
 
-  const onCopy = async () => {
-    if (!generatedCode) return;
-    await navigator.clipboard.writeText(generatedCode);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const onDownload = () => {
-    if (!generatedCode) return;
-    const blob = new Blob([generatedCode], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "Component.tsx";
-    a.click();
-    URL.revokeObjectURL(url);
+  const handleCopy = () => {
+    if (generatedCode) {
+      navigator.clipboard.writeText(generatedCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (
-    <div className="rounded-2xl border border-border bg-card/70 p-4 backdrop-blur h-full flex flex-col">
-      <div className="mx-1 h-5 mb-6 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-foreground">Code</h3>
-        <div className="flex gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onCopy}
-            disabled={!generatedCode}
-            className="h-8 px-3"
-          >
-            {copied ? (
-              <>
-                <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Copied
-              </>
-            ) : (
-              <>
-                <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                Copy
-              </>
-            )}
-          </Button>
-          <Button size="sm" onClick={onDownload} disabled={!generatedCode} className="h-8 px-3">
-            <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Download
-          </Button>
+    <div className="mx-6 flex flex-col rounded-lg border border-border bg-card shadow-sm xl:mx-0">
+      <div className="flex items-center justify-between border-b border-border px-5 py-3">
+        <div className="flex items-center gap-2">
+          <svg className="size-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+          </svg>
+          <span className="text-sm font-medium text-foreground">Code</span>
         </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleCopy}
+          disabled={!generatedCode}
+          className="h-7 px-2 text-xs"
+        >
+          {copied ? (
+            <>
+              <svg className="mr-1 size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Copied
+            </>
+          ) : (
+            <>
+              <svg className="mr-1 size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              Copy
+            </>
+          )}
+        </Button>
       </div>
-      <div className="flex-1 rounded-lg border overflow-hidden border-border/60">
+      <div className="relative flex-1 overflow-hidden">
         {generatedCode ? (
-          <LiveProvider code={generatedCode} theme={themes.vsDark} >
-            <LiveEditor
-              style={{ height: "100%", minHeight: "400px", maxHeight: "400px", overflow: "auto", fontSize: 14, scrollbarWidth: 'thin', scrollbarColor: 'rgba(255, 255, 255, 0.15) #1e1e1e' }}
-              disabled
-            />
+          <LiveProvider code={generatedCode} theme={themes.nightOwl}>
+            <LiveEditor className="overflow-auto p-4 font-mono text-sm" style={{ minHeight: '256px' }} />
           </LiveProvider>
         ) : (
-          <div className="flex h-[400px] items-center justify-center bg-background/70">
-            <p className="text-sm text-muted-foreground">No code generated yet</p>
+          <div className="flex items-center justify-center p-8 min-h-64">
+            <p className="text-sm text-muted-foreground">Generated code will appear here</p>
           </div>
         )}
       </div>
@@ -126,53 +139,56 @@ const Generator = () => {
   const [style, setStyle] = useState("tailwind");
   const [prompt, setPrompt] = useState("");
   const [generatedCode, setGeneratedCode] = useState<string | null>(null);
-  const user = useAuth();
+  const [components, setComponents] = useState<Array<{ name: string; code: string }>>([]);
+  const [selectedComponent, setSelectedComponent] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Ohjaa takaisin etusivulle jos ei kirjautunut
-    if (user === null) {
+    if (!authLoading && user === null) {
       navigate('/');
     }
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
 
   const onGenerate = async () => {
     if (!prompt.trim()) return;
+    
     setLoading(true);
+    setError(null);
+    
     try {
-      await new Promise((r) => setTimeout(r, 1200));
-      const code = `() => (
-  <div style={{ padding: '2rem', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
-    <button
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: '0.5rem',
-        backgroundColor: '#2563eb',
-        padding: '0.75rem 1.5rem',
-        fontSize: '0.875rem',
-        fontWeight: '500',
-        color: 'white',
-        border: 'none',
-        cursor: 'pointer',
-        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
-        transition: 'background-color 0.2s',
-      }}
-      onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1d4ed8'}
-      onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
-    >
-      ${prompt || "Generated Component"}
-    </button>
-  </div>)`;
-      setGeneratedCode(code);
+      const response = await generateComponent(prompt);
+      setGeneratedCode(response.code);
+      setComponents(response.components || []);
+      setSelectedComponent(0);
+    } catch (err) {
+      const error = err as ApiError;
+      if (error?.statusCode !== undefined) {
+        setError(error.message);
+        console.error('API Error:', error.details);
+      } else {
+        setError('An unexpected error occurred');
+        console.error('Error:', err);
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent" />
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!user) {
-    return <div>Loading...</div>;
+    return null;
   }
 
   return (
@@ -180,6 +196,28 @@ const Generator = () => {
       <Header />
       <main className="mx-auto max-w-[1400px] pb-12 pt-24 lg:px-8">
         <div className="space-y-6">
+          {error && (
+            <div className="mx-6 rounded-lg border border-destructive/50 bg-destructive/10 p-4">
+              <div className="flex items-start gap-3">
+                <svg className="size-5 text-destructive shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div className="flex-1">
+                  <h4 className="text-sm font-semibold text-destructive">Generation failed</h4>
+                  <p className="mt-1 text-sm text-destructive/90">{error}</p>
+                </div>
+                <button
+                  onClick={() => setError(null)}
+                  className="text-destructive hover:text-destructive/80 transition-colors"
+                >
+                  <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-row gap-6">
             <SettingsPanel
               framework={framework}
@@ -198,7 +236,12 @@ const Generator = () => {
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            <PreviewCard generatedCode={generatedCode} />
+           <PreviewCard 
+             generatedCode={generatedCode} 
+             components={components}
+             selectedComponent={selectedComponent}
+             setSelectedComponent={setSelectedComponent}
+           />
             <CodeCard generatedCode={generatedCode} />
           </div>
         </div>

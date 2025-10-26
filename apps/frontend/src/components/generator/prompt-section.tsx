@@ -32,7 +32,7 @@ const PromptSection = ({
       <textarea
         ref={textareaRef}
         placeholder="e.g. A modern pricing card with gradient border, icon, title, price, features list, and a primary button"
-        className="min-h-[80px] max-h-[300px] w-full resize-none overflow-y-auto rounded-lg border border-border bg-background/80 p-4 text-sm outline-none placeholder:text-muted-foreground/60 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition"
+        className="min-h-20 max-h-[300px] w-full resize-none overflow-y-auto rounded-lg border border-border bg-background/80 p-4 text-sm outline-none placeholder:text-muted-foreground/60 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition"
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
       />
