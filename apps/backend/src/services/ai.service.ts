@@ -19,6 +19,8 @@ CRITICAL REQUIREMENTS:
 - Format: () => { return (<element>...</element>) }
 - Use Tailwind CSS classes for styling
 - Use semantic HTML and ARIA attributes
+- Only following components are allowed: Button, Input, Textarea, Card, Badge, Modal, Navbar
+- and only one of each component
 
 CORRECT FORMAT FOR MULTIPLE COMPONENTS:
 
@@ -207,6 +209,8 @@ REMEMBER:
       .replace(/\/\/.*/g, "")
       // Remove any explanatory text before the function
       .replace(/^.*?(?=\(\s*\)\s*=>)/s, "")
+      // Transform fixed positioning to absolute for preview isolation
+      .replace(/className="([^"]*)\bfixed\b([^"]*)"/g, 'className="$1absolute$2"')
       // Remove leading/trailing whitespace
       .trim();
 

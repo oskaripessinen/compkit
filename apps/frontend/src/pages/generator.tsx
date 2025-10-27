@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Header } from "@/components/generator/header";
 import { PromptSection } from "@/components/generator/prompt-section";
 import { SettingsPanel } from "@/components/generator/settings-panel";
@@ -8,7 +7,7 @@ import { Footer } from "@/components/home/footer";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { generateComponent, type ApiError } from "@/api/client";
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LiveProvider, LivePreview, LiveEditor, LiveError } from 'react-live';
 import { themes } from 'prism-react-renderer';
 
@@ -26,8 +25,6 @@ const PreviewCard = ({
   const currentComponent = components[selectedComponent];
   const displayCode = currentComponent ? currentComponent.code : generatedCode;
 
-  console.log(components);
-
   return (
     <div className="mx-6 flex flex-col rounded-lg border border-border bg-card shadow-sm xl:mx-0">
       <div className="flex items-center justify-between border-b border-border px-5 py-3">
@@ -39,30 +36,31 @@ const PreviewCard = ({
           <span className="text-sm font-medium text-foreground">Preview</span>
         </div>
        {components.length > 1 && (
-         <div className="flex gap-1">
+         <Select value={selectedComponent.toString()} onValueChange={(value) => setSelectedComponent(parseInt(value))}>
+          <SelectTrigger className="cursor-pointer border-0 border-border text-foreground hover:opacity-50">
+            <SelectValue />
+          </SelectTrigger>
+            <SelectContent>
            {components.map((comp, index) => (
-             <Button
+              <SelectItem
                key={index}
-               variant={selectedComponent === index ? "default" : "outline"}
-               size="sm"
-               onClick={() => setSelectedComponent(index)}
-               className="h-7 px-2 text-xs"
-             >
-               {comp.name}
-             </Button>
+               value={index.toString()}
+             >{comp.name}</SelectItem>
            ))}
-         </div>
+            </SelectContent>
+         </Select>
        )}
-        <Badge variant="secondary" className="text-xs">Live</Badge>
       </div>
-      <div className="flex min-h-64 items-center justify-center p-8 bg-muted/30">
+      <div className="relative flex h-96 items-center justify-center p-8 bg-muted/30 overflow-auto">
        {displayCode ? (
           <LiveProvider 
-           code={displayCode}
+            code={displayCode}
             theme={themes.nightOwl}
             noInline={false}
           >
-            <LivePreview />
+           <div className="relative w-full">
+             <LivePreview />
+           </div>
             <LiveError className="mt-4 text-sm text-destructive" />
           </LiveProvider>
         ) : (
@@ -73,12 +71,23 @@ const PreviewCard = ({
   );
 };
 
-const CodeCard = ({ generatedCode }: { generatedCode: string | null }) => {
+const CodeCard = ({ 
+  generatedCode, 
+  components, 
+  selectedComponent 
+}: { 
+  generatedCode: string | null;
+  components: Array<{ name: string; code: string }>;
+  selectedComponent: number;
+}) => {
   const [copied, setCopied] = useState(false);
 
+  const currentComponent = components[selectedComponent];
+  const displayCode = currentComponent ? currentComponent.code : generatedCode;
+
   const handleCopy = () => {
-    if (generatedCode) {
-      navigator.clipboard.writeText(generatedCode);
+    if (displayCode) {
+      navigator.clipboard.writeText(displayCode);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -97,7 +106,7 @@ const CodeCard = ({ generatedCode }: { generatedCode: string | null }) => {
           variant="ghost"
           size="sm"
           onClick={handleCopy}
-          disabled={!generatedCode}
+          disabled={!displayCode}
           className="h-7 px-2 text-xs"
         >
           {copied ? (
@@ -117,13 +126,13 @@ const CodeCard = ({ generatedCode }: { generatedCode: string | null }) => {
           )}
         </Button>
       </div>
-      <div className="relative flex-1 overflow-hidden">
-        {generatedCode ? (
-          <LiveProvider code={generatedCode} theme={themes.nightOwl}>
-            <LiveEditor className="overflow-auto p-4 font-mono text-sm" style={{ minHeight: '256px' }} />
+      <div className="relative h-96 overflow-hidden">
+        {displayCode ? (
+          <LiveProvider code={displayCode} theme={themes.nightOwl}>
+            <LiveEditor className="h-full overflow-auto p-4 font-mono text-sm" />
           </LiveProvider>
         ) : (
-          <div className="flex items-center justify-center p-8 min-h-64">
+          <div className="flex items-center justify-center h-full">
             <p className="text-sm text-muted-foreground">Generated code will appear here</p>
           </div>
         )}
@@ -242,7 +251,11 @@ const Generator = () => {
              selectedComponent={selectedComponent}
              setSelectedComponent={setSelectedComponent}
            />
-            <CodeCard generatedCode={generatedCode} />
+            <CodeCard 
+              generatedCode={generatedCode}
+              components={components}
+              selectedComponent={selectedComponent}
+            />
           </div>
         </div>
       </main>

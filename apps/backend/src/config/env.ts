@@ -9,7 +9,7 @@ export const config = {
   openRouter: {
     apiKey: process.env.OPEN_ROUTER_API,
     baseUrl: "https://openrouter.ai/api/v1",
-    model: "minimax/minimax-m2:free",
+    model: "qwen/qwen-2.5-coder-32b-instruct:free",
   },
 } as const;
 
