@@ -56,7 +56,8 @@ This will:
 
 **Backend:**
 - Node.js + Express
-- Database (PostgreSQL) for component storage
+- OpenRouter API (AI generation)
+- Supabase (PostgreSQL + Auth)
 
 **CLI:**
 - `npx compkit` — Install published libraries
@@ -81,7 +82,7 @@ npx compkit install modern-buttons-x9k2
 
 ---
 
-##  Example Workflow
+## Example Workflow
 
 1. **Generate** a button component:
    ```
@@ -111,31 +112,71 @@ npx compkit install modern-buttons-x9k2
 
 ## Development
 
+### Prerequisites
+- Node.js 18+ 
+- pnpm 8+
+
+### Setup
+
 ```bash
 # Clone the repo
 git clone https://github.com/oskaripessinen/compkit.git
 cd compkit
 
-# Install dependencies
-npm install
+# Install dependencies (monorepo)
+pnpm install
+
+# Set up environment variables
+cp apps/backend/.env.example apps/backend/.env
+cp apps/frontend/.env.example apps/frontend/.env
+# Edit .env files with your API keys
+
+# Run both frontend and backend concurrently
+pnpm dev
+
+# Or run them separately:
 
 # Run frontend (Vite)
-npm run dev
+pnpm --filter frontend dev
 
 # Run backend (Express)
-cd server
-npm run dev
+pnpm --filter backend dev
+```
+
+### Project Structure
+```
+compkit/
+├── apps/
+│   ├── frontend/     # React + Vite app
+│   └── backend/      # Express API
+├── packages/
+│   └── types/        # Shared TypeScript types
+└── pnpm-workspace.yaml
 ```
 
 ---
 
 ## Roadmap
-- [ ] User authentication
-- [ ] AI component generation
-- [ ] Component preview
+- [x] User authentication (Supabase)
+- [x] AI component generation (OpenRouter)
+- [x] Component preview (React Live)
 - [ ] Library publishing with unique IDs
 - [ ] CLI for installing libraries (`npx compkit install <id>`)
-- [ ] library management
+- [ ] Library management dashboard
+- [ ] Component versioning
+- [ ] Community library showcase
+
+---
+
+## Contributing
+
+Contributions are welcome! Please open an issue or PR.
+
+---
+
+## License
+
+MIT
 
 
 
