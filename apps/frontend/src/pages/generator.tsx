@@ -26,45 +26,48 @@ const PreviewCard = ({
   const displayCode = currentComponent ? currentComponent.code : generatedCode;
 
   return (
-    <div className="mx-6 flex flex-col rounded-lg border border-border bg-card shadow-sm xl:mx-0">
-      <div className="flex items-center justify-between border-b border-border px-5 py-3">
-        <div className="flex items-center gap-2">
-          <svg className="size-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-          </svg>
-          <span className="text-sm font-medium text-foreground">Preview</span>
+    <div className="mx-6 flex my-0 py-0 flex-col rounded-lg border border-border bg-card shadow-sm xl:mx-0">
+      <div className="flex items-center border-b border-border">
+        <div className="flex items-center w-full justify-between mx-5">
+          <div className="flex h-12 items-center gap-2">
+            <svg className="size-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+            <span className="text-sm font-medium text-foreground">Preview</span>
+          </div>
+        {components.length > 1 && (
+          <Select value={selectedComponent.toString()} onValueChange={(value) => setSelectedComponent(parseInt(value))}>
+            <SelectTrigger className="cursor-pointer border-0 border-border text-foreground hover:opacity-50">
+              <SelectValue />
+            </SelectTrigger>
+              <SelectContent>
+            {components.map((comp, index) => (
+                <SelectItem
+                key={index}
+                value={index.toString()}
+              >{comp.name}</SelectItem>
+            ))}
+              </SelectContent>
+          </Select>
+        )}
         </div>
-       {components.length > 1 && (
-         <Select value={selectedComponent.toString()} onValueChange={(value) => setSelectedComponent(parseInt(value))}>
-          <SelectTrigger className="cursor-pointer border-0 border-border text-foreground hover:opacity-50">
-            <SelectValue />
-          </SelectTrigger>
-            <SelectContent>
-           {components.map((comp, index) => (
-              <SelectItem
-               key={index}
-               value={index.toString()}
-             >{comp.name}</SelectItem>
-           ))}
-            </SelectContent>
-         </Select>
-       )}
       </div>
-      <div className="relative flex h-96 items-center justify-center p-8 bg-muted/30 overflow-auto">
+      <div className="flex h-96 items-center justify-center bg-muted/30 overflow-hidden">
        {displayCode ? (
           <LiveProvider 
             code={displayCode}
-            theme={themes.nightOwl}
             noInline={false}
           >
-           <div className="relative w-full">
-             <LivePreview />
+           <div className="w-full flex items-center justify-center h-full">
+             <LivePreview className='flex h-full items-center w-full justify-center' />
            </div>
             <LiveError className="mt-4 text-sm text-destructive" />
           </LiveProvider>
         ) : (
-          <p className="text-sm text-muted-foreground">Component preview will appear here</p>
+          <div className="flex items-center justify-center h-full">
+            <p className="text-sm text-muted-foreground">Generated component will appear here</p>
+          </div>
         )}
       </div>
     </div>
@@ -94,9 +97,10 @@ const CodeCard = ({
   };
 
   return (
-    <div className="mx-6 flex flex-col rounded-lg border border-border bg-card shadow-sm xl:mx-0">
-      <div className="flex items-center justify-between border-b border-border px-5 py-3">
-        <div className="flex items-center gap-2">
+    <div className="mx-6 flex my-0 flex-col rounded-lg border border-border bg-card shadow-sm xl:mx-0">
+      <div className="flex items-center justify-between border-b border-border">
+        <div className="flex items-center w-full justify-between mx-5">
+        <div className="flex h-12 items-center gap-2">
           <svg className="size-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
           </svg>
@@ -111,25 +115,30 @@ const CodeCard = ({
         >
           {copied ? (
             <>
-              <svg className="mr-1 size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
               Copied
             </>
           ) : (
             <>
-              <svg className="mr-1 size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
               Copy
             </>
           )}
         </Button>
+        </div>
       </div>
-      <div className="relative h-96 overflow-hidden">
+      <div className="relative h-96 overflow-hidden rounded-b-lg bg-muted/30">
         {displayCode ? (
-          <LiveProvider code={displayCode} theme={themes.nightOwl}>
-            <LiveEditor className="h-full overflow-auto p-4 font-mono text-sm" />
+          <LiveProvider code={displayCode} noInline={true} theme={themes.vsDark}>
+            <div className="h-full overflow-hidden">
+              <LiveEditor 
+                className="flex h-full bg-transparent overflow-x-hidden font-mono text-sm leading-relaxed" 
+              />
+            </div>
           </LiveProvider>
         ) : (
           <div className="flex items-center justify-center h-full">
