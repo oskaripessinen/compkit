@@ -18,8 +18,8 @@ const SettingsPanel = ({
 }) => {
   return (
     <div className="rounded-2xl min-w-[300px] border border-border bg-card/70 p-6 backdrop-blur">
-      <h3 className="mb-8 text-sm font-semibold text-foreground">Configuration</h3>
-      <div className="space-y-4">
+      <h3 className="mb-4 text-sm font-semibold text-foreground">Configuration</h3>
+      <div className="space-y-5">
         <div>
           <Select value={framework} onValueChange={setFramework}>
             <SelectTrigger className="w-full">

@@ -11,9 +11,11 @@
   },
   "dependencies": {
     "@codesandbox/sandpack-react": "^2.20.0",
+    "@compkit/types": "workspace:*",
     "@fontsource/poppins": "^5.2.7",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-select": "^2.2.6",
+    "@radix-ui/react-separator": "^1.1.7",
     "@radix-ui/react-slot": "^1.2.3",
     "@supabase/supabase-js": "^2.76.1",
     "@tailwindcss/vite": "^4.1.15",
@@ -26,8 +28,7 @@
     "react-live": "^4.1.8",
     "react-router-dom": "^7.9.4",
     "tailwind-merge": "^3.3.1",
-    "tailwindcss": "^4.1.15",
-    "@compkit/types": "workspace:*"
+    "tailwindcss": "^4.1.15"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
