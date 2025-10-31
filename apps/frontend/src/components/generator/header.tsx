@@ -3,12 +3,24 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { LogOut, Gem } from "lucide-react";
+
+import { useAuth } from '@/hooks/useAuth'
 
 
 
 const Header = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
 
   const handleSignOut = async () => {
     setLoading(true);
@@ -34,15 +46,61 @@ const Header = () => {
           <Badge variant="secondary" className="ml-2 text-xs">Generator</Badge>
         </div>
         <nav className="hidden items-center gap-4 text-sm md:flex">
-          <Button
-            onClick={handleSignOut}
-            disabled={loading}
-            size="sm"
-            variant="outline"
-            className="border-border text-foreground hover:bg-muted"
-          >
-            {loading ? "Signing out..." : "Sign Out"}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild className="outline-none">
+              <Button variant="ghost" className="px-3 py-6 border-0 ring-0 outline-none shadow-none">
+                <img
+                  src={user?.avatarUrl || `https://www.gravatar.com/avatar/?d=mp&s=64`}
+                  alt="User Avatar"
+                  className="h-7 w-7 rounded-md"
+                />
+                <div className="ml-1 flex flex-col items-start leading-tight">
+                  <span className="">{user?.name}</span>
+                  <span className="text-muted-foreground font-sans text-xs">{user?.tier || 'Free'}</span>
+                </div>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="border-0">
+              <DropdownMenuLabel>
+                <div className="flex items-center gap-3">
+                  <img src={user?.avatarUrl || `https://www.gravatar.com/avatar/?d=mp&s=64`} alt="User Avatar"
+                    className="h-9 w-9 rounded-md" />
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs">{user?.email}</span>
+                    <Badge variant="secondary" className="text-xs">Free</Badge>
+                  </div>
+                </div>
+                <div className="mt-3 items-center rounded-md bg-muted px-3 py-2 text-xs font-semibold flex justify-between">
+                    <span className="flex flex-row gap-1"><Gem className="h-4 w-4" strokeWidth={1.4} /> Get Pro</span>
+                    <Button size='sm' variant='default' className="text-xs h-7">Upgrade</Button>
+                </div>
+                <div className="mt-3 items-center rounded-md bg-muted px-3 py-2 text-xs font-semibold">
+                  <div className="mb-1 flex justify-between">
+                    <span>Credits</span>
+                    <span className="text-muted-foreground text-xs">{user?.credits ?? 3} left</span>
+                  </div>
+                  <div className="h-2 w-full rounded-full bg-card mt-3">
+                    <div
+                      className="h-2 rounded-full bg-amber-50 transition-all duration-300"
+                      style={{
+                        width: `${((user?.credits ?? 3) / (5)) * 100}%`,
+                      }}
+                    > 
+                    </div>
+                  </div>
+
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator className="h-px" />
+              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuItem>Billing</DropdownMenuItem>
+              <DropdownMenuSeparator className="h-px" />
+              <DropdownMenuItem onClick={handleSignOut}>
+                <LogOut className="h-4 w-4" /> Sign Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
         </nav>
       </div>
     </header>

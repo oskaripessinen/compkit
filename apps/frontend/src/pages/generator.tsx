@@ -8,12 +8,15 @@ import { generateComponent, type ApiError } from "@/api/client";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, } from "@/components/ui/dialog"
+import { toast } from 'sonner';
 import { LiveProvider, LivePreview, LiveEditor, LiveError } from 'react-live';
 import { themes } from 'prism-react-renderer';
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { ButtonGroup } from "@/components/ui/button-group";
-import { SendHorizontal, Package } from 'lucide-react';
+import { SendHorizontal, Package, Copy, CopyCheck } from 'lucide-react';
+
+
 
 
   const customTheme = {
@@ -40,8 +43,8 @@ const PreviewCard = ({
   const displayCode = currentComponent ? currentComponent.code : generatedCode;
 
   return (
-    <div className="flex flex-col rounded-lg border border-border bg-card shadow-sm h-full max-h-[550px]">
-      <div className="flex items-center justify-between border-b border-border px-5 py-3">
+   <div className="flex flex-col rounded-2xl border border-border/50 bg-card shadow-lg shadow-black/10 h-full max-h-[550px] ring-1 ring-white/5">
+      <div className="flex items-center justify-between border-b border-border px-5 h-15">
         <div className="flex items-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" className="size-5" viewBox="0 0 24 24" fill="none" stroke='#a4a4a4' strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
@@ -97,25 +100,38 @@ const CodeCard = ({
 }) => {
   const currentComponent = components[selectedComponent];
   const displayCode = currentComponent ? currentComponent.code : generatedCode;
+  const [copied, setCopied] = useState(false);
 
+  const handleCopy = () => {
+    if (displayCode) {
+      navigator.clipboard.writeText(displayCode);
+      setCopied(true);
+      toast.success("Code copied to clipboard");
+      setTimeout(() => setCopied(false), 4000);
+    }
+  };
 
   return (
-    <div className="flex flex-col rounded-2xl border border-border bg-card shadow-sm h-full max-h-[550px]">
-      <div className="flex items-center justify-between border-b border-border px-5 py-5">
-        <div className="flex items-center gap-2">
+   <div className="flex flex-col rounded-2xl border border-border/50 bg-card shadow-lg shadow-black/10 h-full max-h-[550px] ring-1 ring-white/5">
+      <div className="flex items-center justify-between border-b border-border px-5 h-15">
+        <div className="flex items-center gap-2 h-8">
           <svg xmlns="http://www.w3.org/2000/svg" className="size-5" viewBox="0 0 24 24" fill="none" stroke='#a4a4a4' strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="m16 18 6-6-6-6"/>
             <path d="m8 6-6 6 6 6"/>
           </svg>
           <span className="text-sm font-medium text-foreground">Code</span>
         </div>
+        {displayCode && (
+        <Button onClick={handleCopy} variant="ghost" size="icon" className="h-8 w-8" disabled={copied}>
+          {copied ? <CopyCheck className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+        </Button>)}
       </div>
       <div className="flex-1 overflow-hidden rounded-2xl bg-card">
         {displayCode ? (
           <LiveProvider code={displayCode} noInline={true} theme={customTheme}>
             <div className="h-full overflow-hidden">
               <LiveEditor 
-                className="h-full flex bg-card p-[1rem] overflow-auto font-mono text-sm leading-relaxed" 
+                className="h-full flex bg-card p-4 overflow-auto font-mono text-sm leading-relaxed" 
               />
             </div>
           </LiveProvider>
@@ -231,7 +247,7 @@ const Generator = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground">
+    <div className="flex flex-col min-h-screen bg-background text-foreground relative bg-linear-gradient-to-b from-primary/5 via-background to-background">
       <Header />
       <main className="mx-auto min-h-screen w-full max-w-[1200px] px-4 lg:px-8 py-6 mt-16">
         {error && (
@@ -278,7 +294,7 @@ const Generator = () => {
             <Dialog>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm">
-                  <Package className="size-4 mr-2" />
+                  <Package className="size-4" />
                   Import Library
                 </Button>
               </DialogTrigger>
@@ -328,10 +344,10 @@ const Generator = () => {
         {/* Follow-up prompt input (bottom, expands when conversation mode active) */}
         <div className={`transition-all duration-300 ease-in-out ${conversationMode ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 h-0 overflow-hidden pointer-events-none'}`}>
           <div className="max-w-6xl mx-auto">
-            <ButtonGroup className="w-full [--radius:1414rem]">
+            <ButtonGroup className="w-full [--radius:1rem]">
               <ButtonGroup className="flex-1">
                 <Input 
-                  className="h-13 px-4" 
+                  className="h-13 px-4 bg-card placeholder:text-muted-foreground/60 text-sm" 
                   value={followupPrompt} 
                   onChange={(e) => setFollowupPrompt(e.target.value)} 
                   placeholder="Modify the component or ask for variations..." 

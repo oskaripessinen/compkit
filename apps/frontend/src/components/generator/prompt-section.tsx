@@ -24,7 +24,7 @@ const PromptSection = ({
   }, [prompt]);
 
   return (
-    <div className="rounded-2xl flex-1 border border-border bg-card/70 p-6 backdrop-blur">
+    <div className="rounded-2xl flex-1 border border-border shadow-lg shadow-black/10 ring-1 ring-white/5 bg-card p-6 backdrop-blur">
       <div className="mb-4">
         <h2 className="text-base font-semibold text-foreground">Describe your component</h2>
         <p className="mt-1 text-xs text-muted-foreground">Type what you want to build and AI will generate it</p>
@@ -32,7 +32,7 @@ const PromptSection = ({
       <textarea
         ref={textareaRef}
         placeholder="e.g. A modern pricing card with gradient border, icon, title, price, features list, and a primary button"
-        className="min-h-20 max-h-[300px] w-full resize-none overflow-y-auto rounded-lg border border-border bg-background/80 p-4 text-sm outline-none placeholder:text-muted-foreground/60 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition"
+        className="min-h-20 max-h-[300px] w-full resize-none overflow-y-auto rounded-lg border border-border bg-background/80 p-4 shadow-md shadow-black/20 text-sm outline-none placeholder:text-muted-foreground/60 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition"
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
       />
