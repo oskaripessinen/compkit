@@ -12,6 +12,7 @@ import { themes } from 'prism-react-renderer';
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { ButtonGroup } from "@/components/ui/button-group";
+import Layout from "../components/layout/Layout";
 
 import { SendHorizontal, Package, Copy, CopyCheck, Plus, Loader2 } from 'lucide-react';
 
@@ -152,15 +153,29 @@ const Generator = () => {
   const [framework, setFramework] = useState("react");
   const [language, setLanguage] = useState("ts");
   const [style, setStyle] = useState("tailwind");
-  const [prompt, setPrompt] = useState("");
-  const [generatedCode, setGeneratedCode] = useState<string | null>(null);
-  const [components, setComponents] = useState<Array<{ name: string; code: string }>>([]);
-  const [selectedComponent, setSelectedComponent] = useState(0);
+  const [prompt, setPrompt] = useState(() => {
+    return sessionStorage.getItem('generator-prompt') || "";
+  });
+  const [generatedCode, setGeneratedCode] = useState<string | null>(() => {
+    const saved = sessionStorage.getItem('generator-code');
+    return saved ? saved : null;
+  });
+  const [components, setComponents] = useState<Array<{ name: string; code: string }>>(() => {
+    const saved = sessionStorage.getItem('generator-components');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [selectedComponent, setSelectedComponent] = useState(() => {
+    const saved = sessionStorage.getItem('generator-selected');
+    return saved ? parseInt(saved) : 0;
+  });
   const [error, setError] = useState<string | null>(null);
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
-  const [conversationMode, setConversationMode] = useState(false);
+  const [conversationMode, setConversationMode] = useState(() => {
+    const saved = sessionStorage.getItem('generator-conversation-mode');
+    return saved ? JSON.parse(saved) : false;
+  });
   const [followupPrompt, setFollowupPrompt] = useState("");
 
   useEffect(() => {
@@ -168,6 +183,30 @@ const Generator = () => {
       navigate('/');
     }
   }, [user, authLoading, navigate]);
+
+  useEffect(() => {
+    sessionStorage.setItem('generator-prompt', prompt);
+  }, [prompt]);
+
+  useEffect(() => {
+    if (generatedCode) {
+      sessionStorage.setItem('generator-code', generatedCode);
+    }
+  }, [generatedCode]);
+
+  useEffect(() => {
+    if (components.length > 0) {
+      sessionStorage.setItem('generator-components', JSON.stringify(components));
+    }
+  }, [components]);
+
+  useEffect(() => {
+    sessionStorage.setItem('generator-selected', selectedComponent.toString());
+  }, [selectedComponent]);
+
+  useEffect(() => {
+    sessionStorage.setItem('generator-conversation-mode', JSON.stringify(conversationMode));
+  }, [conversationMode]);
 
   const onGenerate = async () => {
     console.log("fdasfs");
@@ -252,9 +291,11 @@ const Generator = () => {
   }
 
   return (
+    
     <div className="flex flex-col min-h-screen text-foreground relative bg-linear-to-b from-background to-black/10">
       <Header />
-      <main className="mx-auto min-h-screen w-full max-w-[1200px] px-4 lg:px-8 mt-22 items-center justify-center flex-1 relative">
+      <Layout>
+      <main className="mx-auto w-full max-w-[1200px] px-4 lg:px-8 mt-22 items-center justify-center flex-1 relative">
         {error && (
           <div className="mb-6 rounded-2xl border border-destructive/50 bg-destructive/10 p-4">
             <div className="flex items-start gap-3">
@@ -328,8 +369,7 @@ const Generator = () => {
             </div>
           </div>
 
-        {/* Input - absolute positioning, slides down when cards appear */}
-        <div className={`absolute top-[200px] left-0 right-0 transition-all duration-700 ease-in-out ${
+        <div className={`absolute top-50 left-0 right-0 transition-all duration-700 ease-in-out ${
           conversationMode 
             ? 'translate-y-[380px]' 
             : 'translate-y-0'
@@ -378,7 +418,8 @@ const Generator = () => {
           </div>
         </div>
       </main>
-      <Footer />
+      </Layout>
+      
     </div>
   );
 };
