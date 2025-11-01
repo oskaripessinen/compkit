@@ -13,7 +13,6 @@ export const config = {
   },
 } as const;
 
-// Validate required env vars
 if (!config.openRouter.apiKey) {
   console.warn("OPEN_ROUTER_API not set - AI generation will not work");
 }

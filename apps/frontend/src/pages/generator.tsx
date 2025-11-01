@@ -1,6 +1,4 @@
 import { Header } from "@/components/generator/header";
-import { PromptSection } from "@/components/generator/prompt-section";
-import { SettingsPanel } from "@/components/generator/settings-panel";
 import { Footer } from "@/components/home/footer";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -14,7 +12,8 @@ import { themes } from 'prism-react-renderer';
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { ButtonGroup } from "@/components/ui/button-group";
-import { SendHorizontal, Package, Copy, CopyCheck } from 'lucide-react';
+
+import { SendHorizontal, Package, Copy, CopyCheck, Plus, Loader2 } from 'lucide-react';
 
 
 
@@ -81,6 +80,7 @@ const PreviewCard = ({
           </LiveProvider>
         ) : (
           <div className="flex items-center justify-center flex-col gap-3">
+            <Loader2 size={24} className="animate-spin" />
             <p className="text-sm text-muted-foreground">Component preview will appear here</p>
           </div>
         )}
@@ -136,7 +136,8 @@ const CodeCard = ({
             </div>
           </LiveProvider>
         ) : (
-          <div className="flex items-center justify-center h-full">
+          <div className="flex items-center justify-center flex-col gap-3 h-full">
+            <Loader2 size={24} className="animate-spin" />
             <p className="text-sm text-muted-foreground">Generated code will appear here</p>
           </div>
         )}
@@ -169,19 +170,23 @@ const Generator = () => {
   }, [user, authLoading, navigate]);
 
   const onGenerate = async () => {
+    console.log("fdasfs");
     if (!prompt.trim()) return;
     
     setLoading(true);
+    setConversationMode(true);
     setError(null);
+    console.log("fdasfs");
     
     try {
       const response = await generateComponent(prompt);
       setGeneratedCode(response.code);
       setComponents(response.components || []);
       setSelectedComponent(0);
-      setConversationMode(true);
+      console.log(response.code);
       setFollowupPrompt("");
     } catch (err) {
+      setConversationMode(false);
       const error = err as ApiError;
       if (error?.statusCode !== undefined) {
         setError(error.message);
@@ -233,7 +238,7 @@ const Generator = () => {
 
   if (authLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex h-screen items-center justify-center">
         <div className="text-center">
           <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent" />
           <p className="text-sm text-muted-foreground">Loading...</p>
@@ -247,9 +252,9 @@ const Generator = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground relative bg-linear-gradient-to-b from-primary/5 via-background to-background">
+    <div className="flex flex-col min-h-screen text-foreground relative bg-linear-to-b from-background to-black/10">
       <Header />
-      <main className="mx-auto min-h-screen w-full max-w-[1200px] px-4 lg:px-8 py-6 mt-16">
+      <main className="mx-auto min-h-screen w-full max-w-[1200px] px-4 lg:px-8 mt-22 items-center justify-center flex-1 relative">
         {error && (
           <div className="mb-6 rounded-2xl border border-destructive/50 bg-destructive/10 p-4">
             <div className="flex items-start gap-3">
@@ -269,92 +274,91 @@ const Generator = () => {
           </div>
         )}
 
-        <div className={`transition-all duration-300 ease-in-out ${conversationMode ? 'opacity-0 -translate-y-4 h-0 overflow-hidden pointer-events-none' : 'opacity-100 translate-y-0 mb-6'}`}>
-          <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6">
-            <SettingsPanel
-              framework={framework}
-              setFramework={setFramework}
-              language={language}
-              setLanguage={setLanguage}
-              style={style}
-              setStyle={setStyle}
-            />
-            <PromptSection
-              prompt={prompt}
-              setPrompt={setPrompt}
-              onGenerate={onGenerate}
-              loading={loading}
-            />
-          </div>
-        </div>
-
-        {/* Import library button (appears after generation) */}
-        {generatedCode && (
-          <div className="flex justify-end mb-4">
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Package className="size-4" />
-                  Import Library
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Import library</DialogTitle>
-                </DialogHeader>
-                <DialogDescription>
-                  Enter the library ID to import. You can download the library or copy the install command.
-                </DialogDescription>
-                <div className="mt-4 flex flex-col gap-3">
-                  <input
-                    value={importLibraryId}
-                    onChange={(e) => setImportLibraryId(e.target.value)}
-                    placeholder="Library ID (e.g. awesome-ui-kit-a7f3)"
-                    className="w-full rounded-md border border-border px-3 py-2 bg-background text-sm outline-none"
-                  />
-                  <div className="flex gap-2">
-                    <Button onClick={handleDownloadLibrary} variant="default" size="sm" className="flex-1">
-                      Download ZIP
-                    </Button>
-                    <Button onClick={handleCopyInstallCmd} variant="outline" size="sm" className="flex-1">
-                      Copy install command
-                    </Button>
+          <div className={`flex flex-col transition-all duration-700 ease-in-out ${
+            conversationMode 
+              ? 'translate-y-0 opacity-100' 
+              : '-translate-y-full opacity-0 pointer-events-none absolute'
+          }`}>
+            <div className="flex justify-end mb-5">
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Package className="size-4" />
+                    Import Library
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Import library</DialogTitle>
+                  </DialogHeader>
+                  <DialogDescription>
+                    Enter the library ID to import. You can download the library or copy the install command.
+                  </DialogDescription>
+                  <div className="mt-4 flex flex-col gap-3">
+                    <input
+                      value={importLibraryId}
+                      onChange={(e) => setImportLibraryId(e.target.value)}
+                      placeholder="Library ID (e.g. awesome-ui-kit-a7f3)"
+                      className="w-full rounded-md border border-border px-3 py-2 bg-background text-sm outline-none"
+                    />
+                    <div className="flex gap-2">
+                      <Button onClick={handleDownloadLibrary} variant="default" size="sm" className="flex-1">
+                        Download ZIP
+                      </Button>
+                      <Button onClick={handleCopyInstallCmd} variant="outline" size="sm" className="flex-1">
+                        Copy install command
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogContent>
+              </Dialog>
+            </div>
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 h-[500px]">
+              <PreviewCard 
+                generatedCode={generatedCode} 
+                components={components}
+                selectedComponent={selectedComponent}
+                setSelectedComponent={setSelectedComponent}
+              />
+              <CodeCard 
+                generatedCode={generatedCode}
+                components={components}
+                selectedComponent={selectedComponent}
+              />
+            </div>
           </div>
-        )}
 
-        {/* Preview + Code (2-column grid with fixed height) */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 h-[600px]">
-          <PreviewCard 
-            generatedCode={generatedCode} 
-            components={components}
-            selectedComponent={selectedComponent}
-            setSelectedComponent={setSelectedComponent}
-          />
-          <CodeCard 
-            generatedCode={generatedCode}
-            components={components}
-            selectedComponent={selectedComponent}
-          />
-        </div>
-
-        {/* Follow-up prompt input (bottom, expands when conversation mode active) */}
-        <div className={`transition-all duration-300 ease-in-out ${conversationMode ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 h-0 overflow-hidden pointer-events-none'}`}>
+        {/* Input - absolute positioning, slides down when cards appear */}
+        <div className={`absolute top-[200px] left-0 right-0 transition-all duration-700 ease-in-out ${
+          conversationMode 
+            ? 'translate-y-[380px]' 
+            : 'translate-y-0'
+        }`}>
           <div className="max-w-6xl mx-auto">
-            <ButtonGroup className="w-full [--radius:1rem]">
+            <div className="flex flex-col gap-10 items-center justify-center">
+            <div className={`transition-all duration-500 ${
+              conversationMode 
+                ? 'opacity-0 h-0 overflow-hidden' 
+                : 'opacity-100'
+            }`}>
+              <span className={`text-3xl font-sans transition-all duration-500`}>Explain your idea</span>
+            </div>
+            <ButtonGroup className="w-3xl [--radius:1rem] justify-center">
               <ButtonGroup className="flex-1">
-                <Input 
-                  className="h-13 px-4 bg-card placeholder:text-muted-foreground/60 text-sm" 
-                  value={followupPrompt} 
-                  onChange={(e) => setFollowupPrompt(e.target.value)} 
-                  placeholder="Modify the component or ask for variations..." 
+                <div className="bg-card rounded-l-2xl flex items-center justify-center px-2 border-r-0 border border-border">
+                  <Button variant="ghost" className="h-10 w-10 bg-card">
+                    <Plus strokeWidth={1.25} className="size-6"/>
+                  </Button>
+                </div>
+                <Input
+                  className="h-13 px-0 bg-card placeholder:text-muted-foreground/60 text-sm"
+                  value={conversationMode ? followupPrompt : prompt} 
+                  onChange={(e) => conversationMode ? setFollowupPrompt(e.target.value) : setPrompt(e.target.value)} 
+                  placeholder={conversationMode ? "Modify the component or ask for variations..." : "Describe the component you want to generate..."}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
-                      handleSendFollowup();
+                      conversationMode ? handleSendFollowup() : onGenerate();
                     }
                   }}
                 />
@@ -363,13 +367,14 @@ const Generator = () => {
                 <Button 
                   size="icon" 
                   className="h-13 w-13"
-                  onClick={handleSendFollowup} 
-                  disabled={followupPrompt.trim() === "" || loading}
+                  onClick={conversationMode ? handleSendFollowup : onGenerate} 
+                  disabled={loading || (conversationMode ? !followupPrompt.trim() : !prompt.trim())}
                 >
                   <SendHorizontal className="size-5" />
                 </Button>
               </ButtonGroup>
             </ButtonGroup>
+          </div>
           </div>
         </div>
       </main>
