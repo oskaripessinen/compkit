@@ -4,15 +4,25 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
+
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { Home, Sparkles, FolderOpen, History, Settings, HelpCircle, PlusSquare, PlusCircle } from "lucide-react"
+import { FolderOpen, History, Settings, HelpCircle, PlusCircle } from "lucide-react"
 
 export function AppSidebar() {
+
+  const handleNewProject = () => {
+    sessionStorage.removeItem('generator-prompt');
+    sessionStorage.removeItem('generator-code');
+    sessionStorage.removeItem('generator-components');
+    sessionStorage.removeItem('generator-selected');
+    sessionStorage.removeItem('generator-conversation-mode');
+    window.location.reload();
+
+  };
+
   return (
     <Sidebar collapsible='icon'>
       <SidebarContent className="mt-5">
@@ -45,7 +55,7 @@ export function AppSidebar() {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href="/generator" className="bg-accent/60">
+                  <a onClick={handleNewProject} className="bg-accent/60 cursor-pointer">
                     <PlusCircle strokeWidth={2.5} className="size-5" />
                     <span className="text-[13px]">New Component</span>
                   </a>

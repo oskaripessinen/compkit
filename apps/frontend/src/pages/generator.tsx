@@ -1,228 +1,51 @@
 import { Header } from "@/components/generator/header";
-import { Footer } from "@/components/home/footer";
 import { useAuth } from "@/hooks/useAuth";
-import { useNavigate } from "react-router-dom";
-import { generateComponent, type ApiError } from "@/api/client";
+import { generateComponent, modifyComponent, type ApiError } from "@/api/client";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, } from "@/components/ui/dialog"
-import { toast } from 'sonner';
-import { LiveProvider, LivePreview, LiveEditor, LiveError } from 'react-live';
-import { themes } from 'prism-react-renderer';
-import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { ButtonGroup } from "@/components/ui/button-group";
 import Layout from "../components/layout/Layout";
-
-import { SendHorizontal, Package, Copy, CopyCheck, Plus, Loader2 } from 'lucide-react';
-
-
-
-
-  const customTheme = {
-    ...themes.vsDark,
-    plain: {
-      ...themes.vsDark.plain,
-      backgroundColor: 'oklch(17.304% 0.00002 271.152)',
-      color: '#ffffff',
-    },
-  };
-
-const PreviewCard = ({ 
-  generatedCode, 
-  components, 
-  selectedComponent, 
-  setSelectedComponent 
-}: { 
-  generatedCode: string | null;
-  components: Array<{ name: string; code: string }>;
-  selectedComponent: number;
-  setSelectedComponent: (index: number) => void;
-}) => {
-  const currentComponent = components[selectedComponent];
-  const displayCode = currentComponent ? currentComponent.code : generatedCode;
-
-  return (
-   <div className="flex flex-col rounded-2xl border border-border/50 bg-card shadow-lg shadow-black/10 h-full max-h-[550px] ring-1 ring-white/5">
-      <div className="flex items-center justify-between border-b border-border px-5 h-15">
-        <div className="flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" className="size-5" viewBox="0 0 24 24" fill="none" stroke='#a4a4a4' strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-            <polyline points="7.5 4.21 12 6.81 16.5 4.21"/>
-            <polyline points="7.5 19.79 7.5 14.6 3 12"/>
-            <polyline points="21 12 16.5 14.6 16.5 19.79"/>
-            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-            <line x1="12" x2="12" y1="22.08" y2="12"/>
-          </svg>
-          <span className="text-sm font-medium text-foreground">Preview</span>
-        </div>
-        {components.length > 1 && (
-          <Select value={selectedComponent.toString()} onValueChange={(value) => setSelectedComponent(parseInt(value))}>
-            <SelectTrigger className="h-8 text-sm border-0 hover:bg-accent/50 cursor-pointer">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {components.map((comp, index) => (
-                <SelectItem key={index} value={index.toString()}>
-                  {comp.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-      </div>
-      <div className="flex-1 flex items-center rounded-2xl justify-center bg-card p-8 overflow-hidden">
-        {displayCode ? (
-          <LiveProvider code={displayCode} noInline={false} theme={customTheme}>
-            <div className="w-full flex items-center justify-center min-h-full">
-              <LivePreview  />
-            </div>
-            <LiveError className="mt-4 text-sm text-destructive" />
-          </LiveProvider>
-        ) : (
-          <div className="flex items-center justify-center flex-col gap-3">
-            <Loader2 size={24} className="animate-spin" />
-            <p className="text-sm text-muted-foreground">Component preview will appear here</p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const CodeCard = ({ 
-  generatedCode, 
-  components, 
-  selectedComponent 
-}: { 
-  generatedCode: string | null;
-  components: Array<{ name: string; code: string }>;
-  selectedComponent: number;
-}) => {
-  const currentComponent = components[selectedComponent];
-  const displayCode = currentComponent ? currentComponent.code : generatedCode;
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = () => {
-    if (displayCode) {
-      navigator.clipboard.writeText(displayCode);
-      setCopied(true);
-      toast.success("Code copied to clipboard");
-      setTimeout(() => setCopied(false), 4000);
-    }
-  };
-
-  return (
-   <div className="flex flex-col rounded-2xl border border-border/50 bg-card shadow-lg shadow-black/10 h-full max-h-[550px] ring-1 ring-white/5">
-      <div className="flex items-center justify-between border-b border-border px-5 h-15">
-        <div className="flex items-center gap-2 h-8">
-          <svg xmlns="http://www.w3.org/2000/svg" className="size-5" viewBox="0 0 24 24" fill="none" stroke='#a4a4a4' strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="m16 18 6-6-6-6"/>
-            <path d="m8 6-6 6 6 6"/>
-          </svg>
-          <span className="text-sm font-medium text-foreground">Code</span>
-        </div>
-        {displayCode && (
-        <Button onClick={handleCopy} variant="ghost" size="icon" className="h-8 w-8" disabled={copied}>
-          {copied ? <CopyCheck className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-        </Button>)}
-      </div>
-      <div className="flex-1 overflow-hidden rounded-2xl bg-card">
-        {displayCode ? (
-          <LiveProvider code={displayCode} noInline={true} theme={customTheme}>
-            <div className="h-full overflow-hidden">
-              <LiveEditor 
-                className="h-full flex bg-card p-4 overflow-auto font-mono text-sm leading-relaxed" 
-              />
-            </div>
-          </LiveProvider>
-        ) : (
-          <div className="flex items-center justify-center flex-col gap-3 h-full">
-            <Loader2 size={24} className="animate-spin" />
-            <p className="text-sm text-muted-foreground">Generated code will appear here</p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
+import { SendHorizontal, Package, Plus, Loader2 } from 'lucide-react';
+import { PreviewCard } from "@/components/generator/preview-card";
+import { CodeCard } from "@/components/generator/code-card";
+import { useGeneratorState } from "@/hooks/sessionStorage";
 
 const Generator = () => {
   const [importLibraryId, setImportLibraryId] = useState("");
   const [loading, setLoading] = useState(false);
-  const [framework, setFramework] = useState("react");
-  const [language, setLanguage] = useState("ts");
-  const [style, setStyle] = useState("tailwind");
-  const [prompt, setPrompt] = useState(() => {
-    return sessionStorage.getItem('generator-prompt') || "";
-  });
-  const [generatedCode, setGeneratedCode] = useState<string | null>(() => {
-    const saved = sessionStorage.getItem('generator-code');
-    return saved ? saved : null;
-  });
-  const [components, setComponents] = useState<Array<{ name: string; code: string }>>(() => {
-    const saved = sessionStorage.getItem('generator-components');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [selectedComponent, setSelectedComponent] = useState(() => {
-    const saved = sessionStorage.getItem('generator-selected');
-    return saved ? parseInt(saved) : 0;
-  });
-  const [error, setError] = useState<string | null>(null);
-  const { user, loading: authLoading } = useAuth();
-  const navigate = useNavigate();
-
-  const [conversationMode, setConversationMode] = useState(() => {
-    const saved = sessionStorage.getItem('generator-conversation-mode');
-    return saved ? JSON.parse(saved) : false;
-  });
   const [followupPrompt, setFollowupPrompt] = useState("");
 
-  useEffect(() => {
-    if (!authLoading && user === null) {
-      navigate('/');
-    }
-  }, [user, authLoading, navigate]);
+  const {
+    prompt,
+    setPrompt,
+    generatedCode,
+    setGeneratedCode,
+    components,
+    setComponents,
+    selectedComponent,
+    setSelectedComponent,
+    conversationMode,
+    setConversationMode,
+  } = useGeneratorState();
 
-  useEffect(() => {
-    sessionStorage.setItem('generator-prompt', prompt);
-  }, [prompt]);
+  const { user, loading: authLoading } = useAuth();
 
-  useEffect(() => {
-    if (generatedCode) {
-      sessionStorage.setItem('generator-code', generatedCode);
-    }
-  }, [generatedCode]);
-
-  useEffect(() => {
-    if (components.length > 0) {
-      sessionStorage.setItem('generator-components', JSON.stringify(components));
-    }
-  }, [components]);
-
-  useEffect(() => {
-    sessionStorage.setItem('generator-selected', selectedComponent.toString());
-  }, [selectedComponent]);
-
-  useEffect(() => {
-    sessionStorage.setItem('generator-conversation-mode', JSON.stringify(conversationMode));
-  }, [conversationMode]);
+  const [error, setError] = useState<string | null>(null);
 
   const onGenerate = async () => {
-    console.log("fdasfs");
     if (!prompt.trim()) return;
     
     setLoading(true);
     setConversationMode(true);
     setError(null);
-    console.log("fdasfs");
     
     try {
       const response = await generateComponent(prompt);
       setGeneratedCode(response.code);
       setComponents(response.components || []);
       setSelectedComponent(0);
-      console.log(response.code);
       setFollowupPrompt("");
     } catch (err) {
       setConversationMode(false);
@@ -244,21 +67,30 @@ const Generator = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await generateComponent(followupPrompt);
-      setComponents((prev) => {
-        const merged = [...prev];
-        if (response.components && response.components.length) {
-          merged.push(...response.components);
-          setSelectedComponent(prev.length);
-        } else if (response.code) {
-          merged.push({ name: `Component${merged.length + 1}`, code: response.code });
-          setSelectedComponent(prev.length);
-        }
-        return merged;
-      });
+     // Get current selected component
+     const currentComponent = components[selectedComponent];
+     
+     if (!currentComponent) {
+       setError('No component selected to modify');
+       return;
+     }
+     
+     // Use modify API
+     const response = await modifyComponent(currentComponent.code, followupPrompt);
+     
+     // Replace the selected component with modified version
+     const modifiedComponents = [...components];
+     modifiedComponents[selectedComponent] = response.components[0] || {
+       name: currentComponent.name,
+       code: response.code
+     };
+     
+     setComponents(modifiedComponents);
+      
+      setGeneratedCode(response.code);
       setFollowupPrompt("");
     } catch (err) {
-      setError('Failed to generate follow-up component');
+      setError('Failed to modify component');
       console.error(err);
     } finally {
       setLoading(false);
@@ -291,7 +123,6 @@ const Generator = () => {
   }
 
   return (
-    
     <div className="flex flex-col min-h-screen text-foreground relative bg-linear-to-b from-background to-black/10">
       <Header />
       <Layout>
@@ -308,7 +139,7 @@ const Generator = () => {
               </div>
               <button onClick={() => setError(null)} className="text-destructive hover:text-destructive/80 transition-colors">
                 <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
                 </svg>
               </button>
             </div>
@@ -383,7 +214,7 @@ const Generator = () => {
             }`}>
               <span className={`text-3xl font-sans transition-all duration-500`}>Explain your idea</span>
             </div>
-            <ButtonGroup className="w-3xl [--radius:1rem] justify-center">
+            <ButtonGroup className={`[--radius:1rem] justify-center ${conversationMode ? 'w-5xl' : 'w-3xl'} transition-all duration-500`}>
               <ButtonGroup className="flex-1">
                 <div className="bg-card rounded-l-2xl flex items-center justify-center px-2 border-r-0 border border-border">
                   <Button variant="ghost" className="h-10 w-10 bg-card">
@@ -398,7 +229,11 @@ const Generator = () => {
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
-                      conversationMode ? handleSendFollowup() : onGenerate();
+                     if (conversationMode) {
+                       handleSendFollowup();
+                     } else {
+                       onGenerate();
+                     }
                     }
                   }}
                 />
@@ -410,7 +245,7 @@ const Generator = () => {
                   onClick={conversationMode ? handleSendFollowup : onGenerate} 
                   disabled={loading || (conversationMode ? !followupPrompt.trim() : !prompt.trim())}
                 >
-                  <SendHorizontal className="size-5" />
+                  {loading ? <Loader2 className="size-5 animate-spin" /> : <SendHorizontal className="size-5" />}
                 </Button>
               </ButtonGroup>
             </ButtonGroup>
@@ -418,8 +253,7 @@ const Generator = () => {
           </div>
         </div>
       </main>
-      </Layout>
-      
+      </Layout>   
     </div>
   );
 };

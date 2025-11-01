@@ -15,8 +15,6 @@ import { LogOut, Gem, SquarePlus } from "lucide-react";
 
 import { useAuth } from '@/hooks/useAuth'
 
-
-
 const Header = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -25,6 +23,13 @@ const Header = () => {
   const handleSignOut = async () => {
     setLoading(true);
     try {
+      // Clear all session storage
+      sessionStorage.removeItem('generator-prompt');
+      sessionStorage.removeItem('generator-code');
+      sessionStorage.removeItem('generator-components');
+      sessionStorage.removeItem('generator-selected');
+      sessionStorage.removeItem('generator-conversation-mode');
+      
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error("Sign out error:", error);
@@ -37,6 +42,7 @@ const Header = () => {
       setLoading(false);
     }
   };
+
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-border bg-background/80 backdrop-blur-lg">

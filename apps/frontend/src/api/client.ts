@@ -54,6 +54,16 @@ export async function generateComponent(prompt: string): Promise<GenerateRespons
   });
 }
 
+export async function modifyComponent(
+  currentCode: string,
+  modificationRequest: string
+): Promise<GenerateResponse> {
+  return fetchApi<GenerateResponse>("/components/modify", {
+    method: "POST",
+    body: JSON.stringify({ currentCode, modificationRequest }),
+  });
+}
+
 export async function publishLibrary(components: string[]) {
   return fetchApi("/libraries/publish", {
     method: "POST",
