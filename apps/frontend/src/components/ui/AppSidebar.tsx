@@ -4,12 +4,15 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
-import { FolderOpen, History, Settings, HelpCircle, PlusCircle } from "lucide-react"
+import { CollapsibleTrigger, Collapsible, CollapsibleContent } from "@/components/ui/collapsible"
+import { FolderOpen, History, Settings, HelpCircle, PlusCircle, ChevronDown, ChevronRight } from "lucide-react"
 
 export function AppSidebar() {
 
@@ -23,20 +26,42 @@ export function AppSidebar() {
 
   };
 
+  const mockProjects = [
+    { id: '1', name: 'Dashboard UI', date: '2 days ago' },
+    { id: '2', name: 'Landing Page', date: '1 week ago' },
+    { id: '3', name: 'Auth Components', date: '2 weeks ago' },
+  ];
+
   return (
     <Sidebar collapsible='icon'>
-      <SidebarContent className="mt-5">
+      <SidebarContent className="mt-10">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="mt-9 text-[13px] text-muted-foreground">
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href="/projects">
-                    <FolderOpen strokeWidth={2.5} className="size-5" />
-                    <span className="text-[13px]">My Projects</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              <Collapsible className="group" defaultOpen={false}>
+                <SidebarMenuItem>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton className="cursor-pointer">
+                      <FolderOpen strokeWidth={2.5} className="size-5" />
+                      <span className="text-[13px]">Projects</span>
+                      <ChevronRight className="ml-auto size-4 transition-transform group-data-[state=open]:rotate-90" />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      {mockProjects.map((project) => (
+
+                          <SidebarMenuButton asChild>
+                            <a href={`/project/${project.id}`} className="">
+                              <span className="text-xs font-medium">{project.name}</span>
+                            </a>
+                          </SidebarMenuButton>
+
+                      ))}
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <a href="/history">
