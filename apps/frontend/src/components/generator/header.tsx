@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, Gem, SquarePlus } from "lucide-react";
+import { LogOut, Gem } from "lucide-react";
 
 import { useAuth } from '@/hooks/useAuth'
 
@@ -45,7 +45,7 @@ const Header = () => {
 
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-border bg-background/80 backdrop-blur-lg">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-border bg-background">
       <div className="mx-auto flex h-14 w-full items-center justify-between px-3">
         <div className="flex items-center gap-2">
           <img width={'28px'} src="../src/assets/logo.png" alt="logo" className="brightness-0 invert" />

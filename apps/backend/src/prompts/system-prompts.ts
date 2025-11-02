@@ -53,34 +53,9 @@ Response:
 
 COMPONENT GUIDELINES:
 
-BUTTON:
-- Use rounded-lg or rounded-md for modern look
-- Include hover: and focus: states
-- Add transition-all or transition-colors
-- KEEP SAME COLORS: "blue button" → always bg-blue-600 hover:bg-blue-700
-
-INPUT:
-- Use border, rounded-md, focus:ring-2
-- Consistent focus colors (e.g., focus:ring-blue-500)
-- Add px-3 py-2 for proper spacing
-- KEEP SAME COLORS: Consistent border and focus ring colors
-
-CARD:
-- Use rounded-xl or rounded-lg with shadow
-- Clear typography hierarchy (text-xl, text-sm)
-- Subtle backgrounds (bg-gray-50, bg-blue-50)
-- KEEP SAME COLORS: Consistent card backgrounds
-
-BADGE:
-- Use rounded-full for pills
-- Small text (text-xs or text-sm)
-- Light backgrounds with darker text
-- KEEP SAME COLORS: Same badge color scheme
 
 MODAL:
 - CRITICAL: Must use "relative" positioning, NOT fixed or absolute
-- Use max-w-md or max-w-lg for width constraint
-- Compact dialog card with proper padding
 - Include close button
 - Use bg-white for dialog, shadow-xl for depth
 - Example structure:
@@ -93,27 +68,6 @@ MODAL:
 - DO NOT add backdrop or overlay elements
 - Just a simple dialog card with relative positioning
 - KEEP SAME COLORS: Consistent modal styling
-
-NAVBAR:
-- Use flex layout with justify-between
-- Include logo and navigation items
-- Use border-b for separation
-- Compact height (h-16 or py-4)
-- KEEP SAME COLORS: Consistent nav styling
-
-TAILWIND COLOR CONSISTENCY:
-- Blue: bg-blue-600 hover:bg-blue-700 text-blue-900
-- Red: bg-red-600 hover:bg-red-700 text-red-900
-- Green: bg-green-600 hover:bg-green-700 text-green-900
-- Purple: bg-purple-600 hover:bg-purple-700
-- Amber: bg-amber-600 hover:bg-amber-700
-- Always use the same shade (e.g., 600/700 for buttons, 50/100 for backgrounds)
-
-CRITICAL COLOR CONSISTENCY RULES:
-- If user requests "blue button" → ALWAYS use bg-blue-600 hover:bg-blue-700
-- If user requests "red card" → ALWAYS use bg-red-50 border-red-200 text-red-900
-- When generating multiple components, use consistent Tailwind shades
-- Same color name = same Tailwind classes
 
 REMEMBER: 
 - Be creative with spacing, typography, and effects using Tailwind utilities

@@ -3,19 +3,23 @@ import { useAuth } from "@/hooks/useAuth";
 import { generateComponent, modifyComponent, type ApiError } from "@/api/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { useState } from "react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { ButtonGroup } from "@/components/ui/button-group";
 import Layout from "../components/layout/Layout";
-import { SendHorizontal, Package, Plus, Loader2 } from 'lucide-react';
+import { SendHorizontal, Package, Plus, Loader2, Paperclip, LayoutTemplate } from 'lucide-react';
 import { PreviewCard } from "@/components/generator/preview-card";
 import { CodeCard } from "@/components/generator/code-card";
 import { useGeneratorState } from "@/hooks/sessionStorage";
+import { presetOptions, componentOptions, colorOptions } from "@/assets/presetOptions";
 
 const Generator = () => {
   const [importLibraryId, setImportLibraryId] = useState("");
   const [loading, setLoading] = useState(false);
   const [followupPrompt, setFollowupPrompt] = useState("");
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
 
   const {
     prompt,
@@ -33,6 +37,40 @@ const Generator = () => {
   const { user, loading: authLoading } = useAuth();
 
   const [error, setError] = useState<string | null>(null);
+  const [isTemplateOpen, setIsTemplateOpen] = useState(false);
+
+  const [templateMode, setTemplateMode] = useState<'preset' | 'manual'>('preset');
+  const [selectedPreset, setSelectedPreset] = useState<string>('core');
+  const [selectedComponents, setSelectedComponents] = useState<string[]>([]);
+  const [selectedColor, setSelectedColor] = useState<string>('blue');
+
+  const toggleComponent = (id: string) => {
+    setSelectedComponents(prev => 
+      prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
+    );
+  };
+
+  const handleInsertTemplate = () => {
+    let componentsToUse: string[];
+    
+    if (templateMode === 'preset') {
+      const preset = presetOptions.find(p => p.id === selectedPreset);
+      componentsToUse = preset?.components || [];
+    } else {
+      componentsToUse = selectedComponents;
+    }
+
+    if (componentsToUse.length === 0) {
+      setError('Please select at least one component');
+      return;
+    }
+
+    const comps = componentsToUse.join(', ');
+    const prompt = `Create ${comps} components with Tailwind CSS using ${selectedColor} color theme. Make them modern, accessible and responsive.`;
+    setPrompt(prompt);
+    setConversationMode(false);
+    setIsTemplateOpen(false);
+  };
 
   const onGenerate = async () => {
     if (!prompt.trim()) return;
@@ -107,6 +145,26 @@ const Generator = () => {
     navigator.clipboard.writeText(`npx compkit install ${importLibraryId}`);
   };
 
+  const handleCopyGeneratedCode = async () => {
+    if (!generatedCode || !generatedCode.trim()) {
+      setError('No generated code to copy');
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(generatedCode);
+    } catch (err) {
+      setError('Failed to copy generated code');
+      console.error(err);
+    }
+  };
+
+  const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files ? Array.from(e.target.files) : [];
+    setFiles(selected);
+    // TODO: process files (upload / attach to conversation / preview)
+    console.log("Selected files:", selected);
+  };
+
   if (authLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -125,8 +183,10 @@ const Generator = () => {
   return (
     <div className="flex flex-col min-h-screen text-foreground relative bg-linear-to-b from-background to-black/10">
       <Header />
+      
       <Layout>
-      <main className="mx-auto w-full max-w-[1200px] px-4 lg:px-8 mt-22 items-center justify-center flex-1 relative">
+      <main className="mx-auto w-full max-w-[1200px] px-4 lg:px-8 mt-20 items-center justify-center flex-1 relative">
+
         {error && (
           <div className="mb-6 rounded-2xl border border-destructive/50 bg-destructive/10 p-4">
             <div className="flex items-start gap-3">
@@ -200,9 +260,9 @@ const Generator = () => {
             </div>
           </div>
 
-        <div className={`absolute top-50 left-0 right-0 transition-all duration-700 ease-in-out ${
+        <div className={`absolute top-[30vh] left-0 right-0 transition-all duration-700 ease-in-out ${
           conversationMode 
-            ? 'translate-y-[380px]' 
+            ? 'translate-y-[320px]' 
             : 'translate-y-0'
         }`}>
           <div className="max-w-6xl mx-auto">
@@ -217,9 +277,26 @@ const Generator = () => {
             <ButtonGroup className={`[--radius:1rem] justify-center ${conversationMode ? 'w-5xl' : 'w-3xl'} transition-all duration-500`}>
               <ButtonGroup className="flex-1">
                 <div className="bg-card rounded-l-2xl flex items-center justify-center px-2 border-r-0 border border-border">
-                  <Button variant="ghost" className="h-10 w-10 bg-card">
-                    <Plus strokeWidth={1.25} className="size-6"/>
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size='icon' variant="ghost" className="p-2">
+                        <Plus className="size-5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-48">
+                      <DropdownMenuItem className="cursor-pointer" onClick={() => document.getElementById('file-input')?.click()}>
+                        <Paperclip className="-rotate-45" />
+                        <span className="font-sans text-[13px]">Add files</span>
+     
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator className="mx-1"/>
+
+                      <DropdownMenuItem className="cursor-pointer" onClick={() => setIsTemplateOpen(true)}>
+                        <LayoutTemplate strokeWidth={2.2} className="" />
+                        <span className="font-sans text-[13px]">Template</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
                 <Input
                   className="h-13 px-0 bg-card placeholder:text-muted-foreground/60 text-sm"
@@ -254,6 +331,126 @@ const Generator = () => {
         </div>
       </main>
       </Layout>   
+      <input
+        ref={fileInputRef}
+        id="file-input"
+        type="file"
+        multiple
+        className="hidden"
+        onChange={handleFiles}
+      />
+
+      <Dialog open={isTemplateOpen} onOpenChange={setIsTemplateOpen}>
+        <DialogContent className={`shadow-xl border border-border/50 max-w-lg ${templateMode == 'preset' ? 'h-[625px]' : ' h-[500px]'} transition-height duration-300 overflow-y-hidden`}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <LayoutTemplate strokeWidth={1.75} className="size-6" />
+              Template
+            </DialogTitle>
+            <DialogDescription>Choose a preset or select components manually</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex gap-2 p-1 bg-muted rounded-lg">
+              <button
+                onClick={() => setTemplateMode('preset')}
+                className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                  templateMode === 'preset' 
+                    ? 'bg-background shadow-sm' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Preset
+              </button>
+              <button
+                onClick={() => setTemplateMode('manual')}
+                className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                  templateMode === 'manual' 
+                    ? 'bg-background shadow-sm' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Manual
+              </button>
+            </div>
+
+            {templateMode === 'preset' && (
+              <div className="animate-in fade-in duration-500">
+                <h4 className="text-sm font-medium mb-2">Component Set</h4>
+                <div className="grid gap-2">
+                  {presetOptions.map(preset => (
+                    <button
+                      key={preset.id}
+                      onClick={() => setSelectedPreset(preset.id)}
+                      className={`text-left p-3 rounded-md border transition-all ${
+                        selectedPreset === preset.id
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:bg-accent/30'
+                      }`}
+                    >
+                      <div className="font-medium text-sm">{preset.label}</div>
+                      <div className="text-xs text-muted-foreground mt-1">{preset.description}</div>
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {preset.components.map(comp => (
+                          <span key={comp} className="text-[11px] bg-muted px-2 py-0.5 rounded-xl">
+                            {comp}
+                          </span>
+                        ))}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {templateMode === 'manual' && (
+              <div className="animate-in fade-in duration-500">
+                <h4 className="text-sm font-medium mb-2">Select Components</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  {componentOptions.map(opt => (
+                    <label 
+                      key={opt.id} 
+                      className="flex items-center gap-2 cursor-pointer rounded-md border border-border p-2 hover:bg-accent/30 transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedComponents.includes(opt.id)}
+                        onChange={() => toggleComponent(opt.id)}
+                        className="rounded"
+                      />
+                      <span className="text-sm">{opt.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div>
+              <h4 className="text-sm font-medium mb-2">Color</h4>
+              <div className="flex gap-2">
+                {colorOptions.map(color => (
+                  <button
+                    key={color.id}
+                    onClick={() => setSelectedColor(color.id)}
+                    className={`px-4 py-2 rounded-md border text-sm transition-all ${
+                      selectedColor === color.id 
+                        ? 'border-primary bg-primary/10' 
+                        : 'border-border hover:bg-accent/30'
+                    }`}
+                  >
+                    {color.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button size="sm" onClick={handleInsertTemplate}>
+                Insert
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
