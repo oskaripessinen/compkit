@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { config } from "../config/env";
 import { COMPONENT_GENERATION_PROMPT, COMPONENT_MODIFICATION_PROMPT } from "../prompts/system-prompts";
+import { ComponentLibraryService } from "./component-library.service";
 
 export class AIService {
   private static client = new OpenAI({
@@ -8,7 +9,15 @@ export class AIService {
     apiKey: config.openRouter.apiKey,
   });
 
-  static async generateComponent(prompt: string): Promise<string> {
+  static async generateComponent(
+    prompt: string,
+    userId: string,
+    libraryName?: string
+  ): Promise<{
+    code: string;
+    library: any;
+    components: any[];
+  }> {
     if (!config.openRouter.apiKey) {
       throw new Error("OPENROUTER_API_KEY not configured");
     }
@@ -37,7 +46,21 @@ export class AIService {
         throw new Error("No code generated from AI");
       }
 
-      return this.cleanCode(generatedCode);
+      const cleanedCode = this.cleanCode(generatedCode);
+
+      // Save to database and create library
+      const { library, components } = await ComponentLibraryService.createLibraryFromGeneration(
+        userId,
+        prompt,
+        cleanedCode,
+        libraryName
+      );
+
+      return {
+        code: cleanedCode,
+        library,
+        components,
+      };
     } catch (error: any) {
       console.error("OpenRouter API Error:", error);
       throw new Error(error.message || "Failed to generate component");
@@ -46,7 +69,9 @@ export class AIService {
 
   static async modifyComponent(
     currentCode: string,
-    modificationRequest: string
+    modificationRequest: string,
+    userId?: string,
+    componentId?: string
   ): Promise<string> {
     if (!config.openRouter.apiKey) {
       throw new Error("OPENROUTER_API_KEY not configured");
@@ -76,7 +101,14 @@ export class AIService {
         throw new Error("No modified code generated from AI");
       }
 
-      return this.cleanCode(modifiedCode);
+      const cleanedCode = this.cleanCode(modifiedCode);
+
+      // Update component in database if userId and componentId are provided
+      if (userId && componentId) {
+        await ComponentLibraryService.updateComponent(userId, componentId, cleanedCode);
+      }
+
+      return cleanedCode;
     } catch (error: any) {
       console.error("OpenRouter API Error:", error);
       throw new Error(error.message || "Failed to modify component");

@@ -11,8 +11,16 @@ export const config = {
     baseUrl: "https://openrouter.ai/api/v1",
     model: "qwen/qwen-2.5-coder-32b-instruct:free",
   },
+  supabase: {
+    url: process.env.SUPABASE_URL || "",
+    serviceKey: process.env.SUPABASE_SERVICE_KEY || "",
+  },
 } as const;
 
 if (!config.openRouter.apiKey) {
   console.warn("OPEN_ROUTER_API not set - AI generation will not work");
+}
+
+if (!config.supabase.url || !config.supabase.serviceKey) {
+  console.warn("SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not set - Database operations will not work");
 }

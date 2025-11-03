@@ -1,4 +1,5 @@
 import type { GenerateRequest, GenerateResponse, ErrorResponse } from "@compkit/types";
+import { supabase } from "../lib/supabase";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
@@ -8,17 +9,24 @@ export interface ApiError {
   details?: string;
 }
 
+async function getAuthToken(): Promise<string | null> {
+  const { data } = await supabase.auth.getSession();
+  return data.session?.access_token || null;
+}
+
 async function fetchApi<T>(
   endpoint: string,
   options?: RequestInit
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
+  const token = await getAuthToken();
 
   try {
     const response = await fetch(url, {
       ...options,
       headers: {
         "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
         ...options?.headers,
       },
     });
@@ -47,20 +55,60 @@ async function fetchApi<T>(
   }
 }
 
-export async function generateComponent(prompt: string): Promise<GenerateResponse> {
+export async function generateComponent(
+  prompt: string,
+  libraryName?: string
+): Promise<GenerateResponse> {
   return fetchApi<GenerateResponse>("/components/generate", {
     method: "POST",
-    body: JSON.stringify({ prompt } satisfies GenerateRequest),
+    body: JSON.stringify({ prompt, libraryName } satisfies GenerateRequest & { libraryName?: string }),
   });
 }
 
 export async function modifyComponent(
   currentCode: string,
-  modificationRequest: string
+  modificationRequest: string,
+  componentId?: string
 ): Promise<GenerateResponse> {
   return fetchApi<GenerateResponse>("/components/modify", {
     method: "POST",
-    body: JSON.stringify({ currentCode, modificationRequest }),
+    body: JSON.stringify({ currentCode, modificationRequest, componentId }),
+  });
+}
+
+export async function getUserLibraries() {
+  return fetchApi("/libraries", {
+    method: "GET",
+  });
+}
+
+export async function getLibraryById(id: string) {
+  return fetchApi(`/libraries/${id}`, {
+    method: "GET",
+  });
+}
+
+export async function addComponentToLibrary(
+  libraryId: string,
+  name: string,
+  code: string,
+  category?: string
+) {
+  return fetchApi(`/libraries/${libraryId}/components`, {
+    method: "POST",
+    body: JSON.stringify({ name, code, category }),
+  });
+}
+
+export async function deleteLibrary(id: string) {
+  return fetchApi(`/libraries/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export async function deleteComponent(id: string) {
+  return fetchApi(`/components/${id}`, {
+    method: "DELETE",
   });
 }
 
@@ -68,11 +116,5 @@ export async function publishLibrary(components: string[]) {
   return fetchApi("/libraries/publish", {
     method: "POST",
     body: JSON.stringify({ components }),
-  });
-}
-
-export async function getLibraryById(id: string) {
-  return fetchApi(`/libraries/${id}`, {
-    method: "GET",
   });
 }
