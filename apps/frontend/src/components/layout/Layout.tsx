@@ -1,7 +1,8 @@
 import { SidebarProvider, useSidebar } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/ui/AppSidebar"
+import type { Library } from "@compkit/types";
 
-function LayoutContent({ children }: { children: React.ReactNode }) {
+function LayoutContent({ children, libraries }: { children: React.ReactNode; libraries: Library[] }) {
   const { setOpen, setOpenMobile } = useSidebar()
 
   const handleMouseEnter = () => {
@@ -20,7 +21,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         onMouseLeave={handleMouseLeave}
         className="group"
       >
-        <AppSidebar />
+        <AppSidebar libraries={libraries} />
       </div>
       <main className="w-full">
         {children}
@@ -29,10 +30,10 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   )
 }
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default function Layout({ children, libraries }: { children: React.ReactNode; libraries: Library[] }) {
   return (
     <SidebarProvider defaultOpen={false}>
-      <LayoutContent>{children}</LayoutContent>
+      <LayoutContent libraries={libraries}>{children}</LayoutContent>
     </SidebarProvider>
   )
 }

@@ -1,4 +1,4 @@
-import type { GenerateRequest, GenerateResponse, ErrorResponse } from "@compkit/types";
+import type { GenerateRequest, GenerateResponse, ErrorResponse, Library, AppUser } from "@compkit/types";
 import { supabase } from "../lib/supabase";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
@@ -76,8 +76,8 @@ export async function modifyComponent(
   });
 }
 
-export async function getUserLibraries() {
-  return fetchApi("/libraries", {
+export async function getUserLibraries(): Promise<{ success: boolean; libraries: Library[] }> {
+  return fetchApi<{ success: boolean; libraries: Library[] }>("/libraries", {
     method: "GET",
   });
 }
@@ -116,5 +116,11 @@ export async function publishLibrary(components: string[]) {
   return fetchApi("/libraries/publish", {
     method: "POST",
     body: JSON.stringify({ components }),
+  });
+}
+
+export async function getUserProfile(): Promise<{ success: boolean; user: AppUser }> {
+  return fetchApi<{ success: boolean; user: AppUser }>("/user/me", {
+    method: "GET",
   });
 }

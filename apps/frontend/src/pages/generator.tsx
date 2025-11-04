@@ -1,10 +1,10 @@
 import { Header } from "@/components/generator/header";
 import { useAuth } from "@/hooks/useAuth";
-import { generateComponent, modifyComponent, type ApiError } from "@/api/client";
+import { generateComponent, getUserLibraries, modifyComponent, type ApiError } from "@/api/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { ButtonGroup } from "@/components/ui/button-group";
 import Layout from "../components/layout/Layout";
@@ -13,6 +13,7 @@ import { PreviewCard } from "@/components/generator/preview-card";
 import { CodeCard } from "@/components/generator/code-card";
 import { useGeneratorState } from "@/hooks/sessionStorage";
 import { presetOptions, componentOptions, colorOptions } from "@/assets/presetOptions";
+import type { Library } from "@compkit/types";
 
 const Generator = () => {
   const [importLibraryId, setImportLibraryId] = useState("");
@@ -20,6 +21,25 @@ const Generator = () => {
   const [followupPrompt, setFollowupPrompt] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [files, setFiles] = useState<File[]>([]);
+
+
+  const [libraries, setLibraries] = useState<Library[]>([]);
+
+  const fetchLibraries = async () => {
+      try {
+        const data = await getUserLibraries();
+        setLibraries(data.libraries || []);
+      } catch (error) {
+        console.error('Failed to fetch libraries:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+  useEffect(() => {
+
+    fetchLibraries();
+  }, []);
 
   const {
     prompt,
@@ -85,6 +105,7 @@ const Generator = () => {
       setComponents(response.components || []);
       setSelectedComponent(0);
       setFollowupPrompt("");
+      fetchLibraries();
     } catch (err) {
       setConversationMode(false);
       const error = err as ApiError;
@@ -97,6 +118,13 @@ const Generator = () => {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const selectedFiles = Array.from(e.target.files);
+      setFiles(selectedFiles);
     }
   };
 
@@ -145,25 +173,6 @@ const Generator = () => {
     navigator.clipboard.writeText(`npx compkit install ${importLibraryId}`);
   };
 
-  const handleCopyGeneratedCode = async () => {
-    if (!generatedCode || !generatedCode.trim()) {
-      setError('No generated code to copy');
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(generatedCode);
-    } catch (err) {
-      setError('Failed to copy generated code');
-      console.error(err);
-    }
-  };
-
-  const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = e.target.files ? Array.from(e.target.files) : [];
-    setFiles(selected);
-    // TODO: process files (upload / attach to conversation / preview)
-    console.log("Selected files:", selected);
-  };
 
   if (authLoading) {
     return (
@@ -183,8 +192,7 @@ const Generator = () => {
   return (
     <div className="flex flex-col min-h-screen text-foreground relative bg-linear-to-b from-background to-black/10">
       <Header />
-      
-      <Layout>
+      <Layout libraries={libraries}>
       <main className="mx-auto w-full max-w-[1200px] px-4 lg:px-8 mt-20 items-center justify-center flex-1 relative">
 
         {error && (
@@ -262,7 +270,7 @@ const Generator = () => {
 
         <div className={`absolute top-[30vh] left-0 right-0 transition-all duration-700 ease-in-out ${
           conversationMode 
-            ? 'translate-y-[320px]' 
+            ? 'translate-y-80' 
             : 'translate-y-0'
         }`}>
           <div className="max-w-6xl mx-auto">

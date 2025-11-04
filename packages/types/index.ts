@@ -9,6 +9,8 @@ export interface AppUser {
   avatarUrl: string | null;
   provider: AuthProvider;
   createdAt?: string | null;
+  tier?: string | null;
+  credits?: number | null;
 }
 
 // A single UI component stored in Supabase

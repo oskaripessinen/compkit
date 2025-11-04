@@ -4,6 +4,7 @@ import { corsMiddleware } from "./middleware/cors";
 import healthRoutes from "./routes/health.routes";
 import componentsRoutes from "./routes/components.routes";
 import librariesRoutes from "./routes/libraries.routes";
+import userRoutes from "./routes/user.routes";
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(express.json());
 app.use("/api", healthRoutes);
 app.use("/api", componentsRoutes);
 app.use("/api", librariesRoutes);
+app.use("/api/user", userRoutes);
 
 // 404 handler
 app.use((req, res) => {
