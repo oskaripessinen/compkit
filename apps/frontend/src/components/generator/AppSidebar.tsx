@@ -11,11 +11,28 @@ import {
 } from "@/components/ui/sidebar"
 import { CollapsibleTrigger, Collapsible, CollapsibleContent } from "@/components/ui/collapsible"
 import { FolderOpen, Settings, HelpCircle, PlusCircle, ChevronRight } from "lucide-react"
-import type { Library } from "@compkit/types";
+import type { LibraryWithComponents } from "@compkit/types";
+import { getLibraryById } from '@/api/client';
+import { ProjectDropdown } from './ProjectDropdown';
 
-export function AppSidebar({ libraries }: { libraries: Library[] }) {
-
-
+export function AppSidebar({ 
+  libraries, 
+  onLoadLibrary 
+}: { 
+  libraries: LibraryWithComponents[];
+  onLoadLibrary?: (library: LibraryWithComponents) => void;
+}) {
+  const handleLoadProject = async (libraryId: string) => {
+    try {
+      const response = await getLibraryById(libraryId);
+      
+      if (onLoadLibrary) {
+        onLoadLibrary(response.library);
+      }
+    } catch (error) {
+      console.error('Failed to load project:', error);
+    }
+  };
 
   const handleNewProject = () => {
     sessionStorage.removeItem('generator-prompt');
@@ -24,10 +41,7 @@ export function AppSidebar({ libraries }: { libraries: Library[] }) {
     sessionStorage.removeItem('generator-selected');
     sessionStorage.removeItem('generator-conversation-mode');
     window.location.reload();
-
   };
-
-
 
   return (
     <Sidebar collapsible='icon'>
@@ -46,15 +60,26 @@ export function AppSidebar({ libraries }: { libraries: Library[] }) {
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <SidebarMenuSub>
-                      {libraries.map((project) => (
-
-                          <SidebarMenuButton asChild>
-                            <a href={`/project/${project.id}`} className="">
+                      {libraries.length === 0 ? (
+                        <div className="px-2 py-1 text-xs text-muted-foreground">No projects yet</div>
+                      ) : (
+                        libraries.map((project) => (
+                          <div key={project.id} className="group/item flex items-center">
+                            <SidebarMenuButton
+                              className="cursor-pointer flex-1 justify-between truncate"
+                              onClick={() => handleLoadProject(project.id)}
+                            >
                               <span className="text-xs font-medium">{project.name}</span>
-                            </a>
-                          </SidebarMenuButton>
-
-                      ))}
+                              <ProjectDropdown 
+                              projectId={project.id} 
+                              projectName={project.name || 'Untitled'} 
+                            />
+                            </SidebarMenuButton>
+                            
+                            
+                          </div>
+                        ))
+                      )}
                     </SidebarMenuSub>
                   </CollapsibleContent>
                 </SidebarMenuItem>

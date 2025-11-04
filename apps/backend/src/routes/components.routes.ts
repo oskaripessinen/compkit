@@ -12,27 +12,22 @@ router.post("/components/generate", optionalAuthMiddleware, async (req, res) => 
   const { prompt, libraryName } = req.body as GenerateRequest & { libraryName?: string };
   const userId = req.user?.id;
 
-  if (!prompt?.trim()) {
-    return res.status(400).json({ 
-      error: "Prompt is required" 
-    } as ErrorResponse);
-  }
-
   if (!userId) {
-    return res.status(401).json({ 
-      error: "Authentication required to generate components" 
-    } as ErrorResponse);
-  }
+      return res.status(400).json({ 
+        error: "User ID is required for authenticated users" 
+      } as ErrorResponse);
+    }
+  
 
   try {
-    const result = await AIService.generateComponent(prompt, userId, libraryName);
     
+    const result = await AIService.generateComponent(prompt, userId, libraryName);
 
     res.json({
       success: true,
       code: result.code,
       components: result.components || AIService.parseComponents(result.code),
-      library: result.library,
+      library: result.library, // Now includes LibraryWithComponents
       model: config.openRouter.model,
     } as GenerateResponse);
 
@@ -84,7 +79,8 @@ router.post("/components/modify", optionalAuthMiddleware, async (req, res) => {
 });
 
 // All routes below require authentication
-// Get all user libraries
+
+// Get all user libraries with components
 router.get("/libraries", authMiddleware, async (req, res) => {
   const userId = req.user!.id;
 
@@ -96,8 +92,7 @@ router.get("/libraries", authMiddleware, async (req, res) => {
       libraries,
     });
   } catch (error: any) {
-    console.error('Error fetching libraries:', error.message);
-    
+    console.error('Error fetching libraries:', error);
     res.status(500).json({
       error: "Failed to fetch libraries",
       details: error.message,
@@ -105,7 +100,7 @@ router.get("/libraries", authMiddleware, async (req, res) => {
   }
 });
 
-// Get single library by ID
+// Get library by ID with components
 router.get("/libraries/:id", authMiddleware, async (req, res) => {
   const userId = req.user!.id;
   const { id } = req.params;
@@ -118,8 +113,7 @@ router.get("/libraries/:id", authMiddleware, async (req, res) => {
       library,
     });
   } catch (error: any) {
-    console.error('Error fetching library:', error.message);
-    
+    console.error('Error fetching library:', error);
     res.status(404).json({
       error: "Library not found",
       details: error.message,
@@ -135,7 +129,7 @@ router.post("/libraries/:id/components", authMiddleware, async (req, res) => {
 
   if (!name || !code) {
     return res.status(400).json({
-      error: "Component name and code are required",
+      error: "Name and code are required",
     } as ErrorResponse);
   }
 
@@ -153,10 +147,9 @@ router.post("/libraries/:id/components", authMiddleware, async (req, res) => {
       component,
     });
   } catch (error: any) {
-    console.error('Error adding component:', error.message);
-    
+    console.error('Error adding component:', error);
     res.status(500).json({
-      error: "Failed to add component to library",
+      error: "Failed to add component",
       details: error.message,
     } as ErrorResponse);
   }
@@ -175,8 +168,7 @@ router.delete("/libraries/:id", authMiddleware, async (req, res) => {
       message: "Library deleted successfully",
     });
   } catch (error: any) {
-    console.error('Error deleting library:', error.message);
-    
+    console.error('Error deleting library:', error);
     res.status(500).json({
       error: "Failed to delete library",
       details: error.message,
@@ -197,8 +189,7 @@ router.delete("/components/:id", authMiddleware, async (req, res) => {
       message: "Component deleted successfully",
     });
   } catch (error: any) {
-    console.error('Error deleting component:', error.message);
-    
+    console.error('Error deleting component:', error);
     res.status(500).json({
       error: "Failed to delete component",
       details: error.message,

@@ -13,32 +13,38 @@ import { PreviewCard } from "@/components/generator/preview-card";
 import { CodeCard } from "@/components/generator/code-card";
 import { useGeneratorState } from "@/hooks/sessionStorage";
 import { presetOptions, componentOptions, colorOptions } from "@/assets/presetOptions";
-import type { Library } from "@compkit/types";
+import type { LibraryWithComponents } from "@compkit/types";
 
 const Generator = () => {
   const [importLibraryId, setImportLibraryId] = useState("");
   const [loading, setLoading] = useState(false);
   const [followupPrompt, setFollowupPrompt] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [files, setFiles] = useState<File[]>([]);
 
-
-  const [libraries, setLibraries] = useState<Library[]>([]);
+  const [libraries, setLibraries] = useState<LibraryWithComponents[]>([]);
 
   const fetchLibraries = async () => {
-      try {
-        const data = await getUserLibraries();
-        setLibraries(data.libraries || []);
-      } catch (error) {
-        console.error('Failed to fetch libraries:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    try {
+      const data = await getUserLibraries();
+      setLibraries(data.libraries || []);
+    } catch (error) {
+      console.error('Failed to fetch libraries:', error);
+    }
+  };
 
   useEffect(() => {
-
     fetchLibraries();
+
+    // Listen for library updates
+    const handleLibraryUpdate = () => {
+      fetchLibraries();
+    };
+
+    window.addEventListener('libraryCreated', handleLibraryUpdate);
+
+    return () => {
+      window.removeEventListener('libraryCreated', handleLibraryUpdate);
+    };
   }, []);
 
   const {
@@ -53,6 +59,31 @@ const Generator = () => {
     conversationMode,
     setConversationMode,
   } = useGeneratorState();
+
+  const handleLoadLibrary = (library: LibraryWithComponents) => {
+    if (!library || !library.components || library.components.length === 0) {
+      console.warn('Cannot load empty library');
+      return;
+    }
+
+    const combinedCode = library.components
+      .map(component => component.code)
+      .join('\n\n');
+
+    const formattedComponents = library.components.map(component => ({
+      name: component.name,
+      code: component.code,
+    }));
+
+    // Update state directly (this triggers re-render)
+    setPrompt(`Loaded from library: ${library.name || 'Untitled'}`);
+    setGeneratedCode(combinedCode);
+    setComponents(formattedComponents);
+    setSelectedComponent(0);
+    setConversationMode(true);
+
+    console.log(`Loaded library "${library.name}" with ${formattedComponents.length} components`);
+  };
 
   const { user, loading: authLoading } = useAuth();
 
@@ -86,8 +117,8 @@ const Generator = () => {
     }
 
     const comps = componentsToUse.join(', ');
-    const prompt = `Create ${comps} components with Tailwind CSS using ${selectedColor} color theme. Make them modern, accessible and responsive.`;
-    setPrompt(prompt);
+    const promptText = `Create ${comps} components with Tailwind CSS using ${selectedColor} color theme. Make them modern, accessible and responsive.`;
+    setPrompt(promptText);
     setConversationMode(false);
     setIsTemplateOpen(false);
   };
@@ -105,7 +136,11 @@ const Generator = () => {
       setComponents(response.components || []);
       setSelectedComponent(0);
       setFollowupPrompt("");
-      fetchLibraries();
+      
+      // Notify sidebar to refresh libraries
+      if (response.library) {
+        window.dispatchEvent(new Event('libraryCreated'));
+      }
     } catch (err) {
       setConversationMode(false);
       const error = err as ApiError;
@@ -118,13 +153,6 @@ const Generator = () => {
       }
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const selectedFiles = Array.from(e.target.files);
-      setFiles(selectedFiles);
     }
   };
 
@@ -192,7 +220,7 @@ const Generator = () => {
   return (
     <div className="flex flex-col min-h-screen text-foreground relative bg-linear-to-b from-background to-black/10">
       <Header />
-      <Layout libraries={libraries}>
+      <Layout libraries={libraries} onLoadLibrary={handleLoadLibrary}>
       <main className="mx-auto w-full max-w-[1200px] px-4 lg:px-8 mt-20 items-center justify-center flex-1 relative">
 
         {error && (
@@ -292,7 +320,7 @@ const Generator = () => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start" className="w-48">
-                      <DropdownMenuItem className="cursor-pointer" onClick={() => document.getElementById('file-input')?.click()}>
+                      <DropdownMenuItem className="cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                         <Paperclip className="-rotate-45" />
                         <span className="font-sans text-[13px]">Add files</span>
      
@@ -341,11 +369,15 @@ const Generator = () => {
       </Layout>   
       <input
         ref={fileInputRef}
-        id="file-input"
         type="file"
         multiple
         className="hidden"
-        onChange={handleFiles}
+        onChange={(e) => {
+          if (e.target.files) {
+            console.log('Files selected:', Array.from(e.target.files).map(f => f.name));
+            // TODO: Handle file upload
+          }
+        }}
       />
 
       <Dialog open={isTemplateOpen} onOpenChange={setIsTemplateOpen}>

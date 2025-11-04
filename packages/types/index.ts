@@ -16,25 +16,31 @@ export interface AppUser {
 // A single UI component stored in Supabase
 export interface Component {
   id: string;
-  userId: string;
+  user_id: string;
   name: string;
-  category: string | null;
   code: string;
-  createdAt: string;
+  category: string | null;
+  created_at: string;
 }
 
-// A saved library snapshot
+// A saved library snapshot (database table)
 export interface Library {
   id: string;
-  userId: string;
   name: string | null;
-  createdAt: string;
+  user_id: string;
+  created_at: string;
+  description?: string | null;
 }
 
 // Relationship: which components belong to a library snapshot
 export interface LibraryComponent {
   libraryId: string;
   componentId: string;
+}
+
+// Library with populated components (from API responses)
+export interface LibraryWithComponents extends Library {
+  components: Component[];
 }
 
 export interface GenerateRequest {
@@ -48,6 +54,7 @@ export interface GenerateResponse {
     name: string;
     code: string;
   }>;
+  library?: LibraryWithComponents; // Added optional library
   model: string;
 }
 
@@ -65,13 +72,4 @@ export interface PublishLibraryRequest {
 export interface PublishLibraryResponse {
   success: boolean;
   libraryId: string;
-}
-
-export interface Library {
-  id: string;
-  name: string | null;
-  description?: string | null;
-  components: string[];
-  createdAt: string;
-  userId: string;
 }

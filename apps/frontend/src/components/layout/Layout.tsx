@@ -1,9 +1,37 @@
 import { SidebarProvider, useSidebar } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/ui/AppSidebar"
-import type { Library } from "@compkit/types";
+import { AppSidebar } from "@/components/generator/AppSidebar"
+import type { LibraryWithComponents } from "@compkit/types";
+import { useEffect, useState } from "react";
 
-function LayoutContent({ children, libraries }: { children: React.ReactNode; libraries: Library[] }) {
+function LayoutContent({ 
+  children, 
+  libraries,
+  onLoadLibrary 
+}: { 
+  children: React.ReactNode; 
+  libraries: LibraryWithComponents[];
+  onLoadLibrary?: (library: LibraryWithComponents) => void;
+}) {
   const { setOpen, setOpenMobile } = useSidebar()
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  // Check if any dropdown is open by looking for open dropdown menu
+  useEffect(() => {
+    const checkDropdownState = () => {
+      const dropdownOpen = document.querySelector('[data-state="open"][role="menu"]');
+      setIsDropdownOpen(!!dropdownOpen);
+    };
+
+    const observer = new MutationObserver(checkDropdownState);
+    observer.observe(document.body, { 
+      childList: true, 
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['data-state']
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   const handleMouseEnter = () => {
     setOpen(true)
@@ -11,7 +39,10 @@ function LayoutContent({ children, libraries }: { children: React.ReactNode; lib
   }
 
   const handleMouseLeave = () => {
-    setOpen(false)
+    // Don't close if dropdown is open
+    if (!isDropdownOpen) {
+      setOpen(false)
+    }
   }
 
   return (
@@ -21,7 +52,7 @@ function LayoutContent({ children, libraries }: { children: React.ReactNode; lib
         onMouseLeave={handleMouseLeave}
         className="group"
       >
-        <AppSidebar libraries={libraries} />
+        <AppSidebar libraries={libraries} onLoadLibrary={onLoadLibrary} />
       </div>
       <main className="w-full">
         {children}
@@ -30,10 +61,20 @@ function LayoutContent({ children, libraries }: { children: React.ReactNode; lib
   )
 }
 
-export default function Layout({ children, libraries }: { children: React.ReactNode; libraries: Library[] }) {
+export default function Layout({ 
+  children, 
+  libraries,
+  onLoadLibrary 
+}: { 
+  children: React.ReactNode; 
+  libraries: LibraryWithComponents[];
+  onLoadLibrary?: (library: LibraryWithComponents) => void;
+}) {
   return (
     <SidebarProvider defaultOpen={false}>
-      <LayoutContent libraries={libraries}>{children}</LayoutContent>
+      <LayoutContent libraries={libraries} onLoadLibrary={onLoadLibrary}>
+        {children}
+      </LayoutContent>
     </SidebarProvider>
   )
 }
