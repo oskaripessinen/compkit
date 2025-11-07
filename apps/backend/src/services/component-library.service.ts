@@ -1,5 +1,8 @@
 import { supabase } from '../config/supabase';
 import { AIService } from './ai.service';
+import type { Response } from 'express';
+import sanitize from 'sanitize-filename';
+import archiver from 'archiver';
 
 export class ComponentLibraryService {
   /**
@@ -303,5 +306,87 @@ export class ComponentLibraryService {
       .join(' ');
 
     return libraryName || `Library ${new Date().toLocaleDateString()}`;
+  }
+
+  /**
+   * Streams a ZIP archive of a library or a single component to the provided Express response.
+   * Public: does not require authentication (use with caution).
+   */
+  static async streamLibraryZip(
+    res: Response,
+    libraryId: string,
+    componentName?: string
+  ): Promise<void> {
+    try {
+      // Fetch library with components (no user restriction)
+      const { data: library, error } = await supabase
+        .from('libraries')
+        .select(`
+          *,
+          library_components (
+            component:components (*)
+          )
+        `)
+        .eq('id', libraryId)
+        .single();
+
+      if (error || !library) {
+        res.status(404).json({ error: 'Library not found' });
+        return;
+      }
+
+      const components = (library.library_components || []).map((lc: any) => lc.component);
+
+      // Optionally filter by component name (case-insensitive)
+      const selected = componentName
+        ? components.filter((c: any) => c.name.toLowerCase() === componentName.toLowerCase())
+        : components;
+
+      if (selected.length === 0) {
+        res.status(404).json({ error: 'Component not found in library' });
+        return;
+      }
+
+      const archive = archiver('zip', { zlib: { level: 9 } });
+
+      const safeLibName = sanitize(library.name || `library-${libraryId}`);
+      const fileName = componentName
+        ? `${safeLibName}-${sanitize(componentName)}.zip`
+        : `${safeLibName}.zip`;
+
+      res.setHeader('Content-Type', 'application/zip');
+      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+
+      archive.on('error', (err) => {
+        console.error('Archive error:', err);
+        // If headers not sent yet, send error
+        try {
+          if (!res.headersSent) res.status(500).json({ error: 'Failed to create archive' });
+        } catch {}
+        archive.abort();
+      });
+
+      archive.pipe(res);
+
+      // Add a simple README describing the package
+      const readme = `Compkit export: ${library.name || libraryId}\n\nContains ${selected.length} component(s).\n`;
+      archive.append(readme, { name: 'README.md' });
+
+      // Add each component as a .tsx file under components/
+      for (const comp of selected) {
+        const fileBase = sanitize(comp.name || comp.id);
+        const filePath = `components/${fileBase}.tsx`;
+        const content = typeof comp.code === 'string' ? comp.code : JSON.stringify(comp.code, null, 2);
+        archive.append(content, { name: filePath });
+      }
+
+      await archive.finalize();
+      // stream will end when archive finalizes
+    } catch (err: any) {
+      console.error('Failed to stream library zip:', err);
+      try {
+        if (!res.headersSent) res.status(500).json({ error: 'Internal server error' });
+      } catch {}
+    }
   }
 }

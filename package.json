@@ -6,7 +6,9 @@
     "packages/*"
   ],
   "dependencies": {
-    "concurrently": "^9.2.1"
+    "archiver": "^7.0.1",
+    "concurrently": "^9.2.1",
+    "sanitize-filename": "^1.6.3"
   },
   "scripts": {
     "dev": "concurrently \"pnpm --filter frontend dev\" \"pnpm --filter backend dev\""
