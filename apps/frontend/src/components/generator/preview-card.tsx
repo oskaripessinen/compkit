@@ -29,8 +29,8 @@ const PreviewCard = ({
     : null;
   console.log('Wrapped Code:', wrappedCode);
   return (
-   <div className="flex flex-col rounded-2xl border border-border/50 bg-card shadow-lg shadow-black/10 h-full max-h-[550px] ring-1 ring-white/5">
-      <div className="flex items-center justify-between border-b border-border px-5 h-15">
+   <div className="flex flex-col rounded-2xl border border-border/50 bg-card shadow-lg shadow-black/10 h-full max-h-[60vh] md:max-h-[550px] ring-1 ring-white/5">
+      <div className="flex items-center justify-between border-b border-border px-4 md:px-5 h-14">
         <div className="flex items-center gap-2">
             <Codesandbox className="size-5" stroke='#a4a4a4' />
           <span className="text-sm font-medium text-foreground">Preview</span>
@@ -50,10 +50,10 @@ const PreviewCard = ({
           </Select>
         )}
       </div>
-      <div className="flex-1 flex items-center rounded-2xl justify-center p-8 overflow-hidden">
+      <div className="flex-1 flex items-center rounded-b-2xl justify-center p-4 md:p-8 overflow-auto">
         {wrappedCode ? (
           <LiveProvider code={wrappedCode} noInline={false}>
-            <div className="w-full flex items-center justify-center min-h-full">
+            <div className="w-full flex items-center justify-center min-h-[10vh] md:min-h-[200px]">
               <LivePreview  />
             </div>
             <LiveError className="mt-4 text-sm text-destructive" />

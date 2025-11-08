@@ -217,11 +217,12 @@ const Generator = () => {
     return null;
   }
 
+  // Updated responsive sizes for the generation panel and preview grid
   return (
     <div className="flex flex-col min-h-screen text-foreground relative bg-linear-to-b from-background to-black/10">
       <Header />
       <Layout libraries={libraries} onLoadLibrary={handleLoadLibrary}>
-      <main className="mx-auto w-full max-w-[1200px] px-4 lg:px-8 mt-20 items-center justify-center flex-1 relative">
+      <main className="mx-auto w-full max-w-[1200px] px-4 lg:px-8 mt-20 md:mt-18 items-center justify-center flex-1 relative">
 
         {error && (
           <div className="mb-6 rounded-2xl border border-destructive/50 bg-destructive/10 p-4">
@@ -242,12 +243,8 @@ const Generator = () => {
           </div>
         )}
 
-          <div className={`flex flex-col transition-all duration-700 ease-in-out ${
-            conversationMode 
-              ? 'translate-y-0 opacity-100' 
-              : '-translate-y-full opacity-0 pointer-events-none absolute'
-          }`}>
-            <div className="flex justify-end mb-5">
+          <div className={`flex flex-col transition-all duration-500 ease-in-out md:static ${conversationMode ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none md:pointer-events-auto'}`}>
+            <div className="flex justify-end mb-4 md:mb-5">
               <Dialog>
                 <DialogTrigger asChild>
                   <Button variant="outline" size="sm">
@@ -255,7 +252,7 @@ const Generator = () => {
                     Import Library
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="border border-border shadow-lg shadow-black/10">
                   <DialogHeader>
                     <DialogTitle>Import library</DialogTitle>
                   </DialogHeader>
@@ -281,7 +278,7 @@ const Generator = () => {
                 </DialogContent>
               </Dialog>
             </div>
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 h-[500px]">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 h-[55vh] md:h-[400px]">
               <PreviewCard 
                 generatedCode={generatedCode} 
                 components={components}
@@ -296,21 +293,13 @@ const Generator = () => {
             </div>
           </div>
 
-        <div className={`absolute top-[30vh] left-0 right-0 transition-all duration-700 ease-in-out ${
-          conversationMode 
-            ? 'translate-y-80' 
-            : 'translate-y-0'
-        }`}>
-          <div className="max-w-6xl mx-auto">
-            <div className="flex flex-col gap-10 items-center justify-center">
-            <div className={`transition-all duration-500 ${
-              conversationMode 
-                ? 'opacity-0 h-0 overflow-hidden' 
-                : 'opacity-100'
-            }`}>
+        <div className={`absolute left-0 right-0 transition-all duration-500 ease-in-out ${conversationMode ? 'top-[18vh] md:top-[18vh] translate-y-60 md:translate-y-80' : 'top-24 md:top-[30vh] translate-y-0'}`}>
+          <div className="max-w-6xl mx-auto px-2 md:px-0">
+            <div className="flex flex-col gap-8 md:gap-10 items-center justify-center">
+            <div className={`transition-all duration-500 ${conversationMode ? 'opacity-0 h-0 overflow-hidden' : 'opacity-100'}`}>
               <span className={`text-3xl font-sans transition-all duration-500`}>Explain your idea</span>
             </div>
-            <ButtonGroup className={`[--radius:1rem] justify-center ${conversationMode ? 'w-5xl' : 'w-3xl'} transition-all duration-500`}>
+            <ButtonGroup className={`[--radius:1rem] justify-center w-full max-w-[900px] transition-all duration-500`}>
               <ButtonGroup className="flex-1">
                 <div className="bg-card rounded-l-2xl flex items-center justify-center px-2 border-r-0 border border-border">
                   <DropdownMenu>
@@ -335,7 +324,7 @@ const Generator = () => {
                   </DropdownMenu>
                 </div>
                 <Input
-                  className="h-13 px-0 bg-card placeholder:text-muted-foreground/60 text-sm"
+                  className="h-12 md:h-13 px-0 bg-card placeholder:text-muted-foreground/60 text-sm"
                   value={conversationMode ? followupPrompt : prompt} 
                   onChange={(e) => conversationMode ? setFollowupPrompt(e.target.value) : setPrompt(e.target.value)} 
                   placeholder={conversationMode ? "Modify the component or ask for variations..." : "Describe the component you want to generate..."}
@@ -354,7 +343,7 @@ const Generator = () => {
               <ButtonGroup>
                 <Button 
                   size="icon" 
-                  className="h-13 w-13"
+                  className="h-12 w-12 md:h-13 md:w-13"
                   onClick={conversationMode ? handleSendFollowup : onGenerate} 
                   disabled={loading || (conversationMode ? !followupPrompt.trim() : !prompt.trim())}
                 >
@@ -381,7 +370,7 @@ const Generator = () => {
       />
 
       <Dialog open={isTemplateOpen} onOpenChange={setIsTemplateOpen}>
-        <DialogContent className={`shadow-xl border border-border/50 max-w-lg ${templateMode == 'preset' ? 'h-[625px]' : ' h-[500px]'} transition-height duration-300 overflow-y-hidden`}>
+        <DialogContent className={`shadow-xl border border-border/50 max-w-lg ${templateMode == 'preset' ? 'h-[60vh] md:h-[625px]' : ' h-[52vh] md:h-[500px]'} transition-height duration-300 overflow-y-auto`}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <LayoutTemplate strokeWidth={1.75} className="size-6" />
