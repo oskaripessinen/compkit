@@ -124,3 +124,15 @@ export async function getUserProfile(): Promise<{ success: boolean; user: AppUse
     method: "GET",
   });
 }
+
+export async function sendEmailOtp(email: string) {
+  const { data, error } = await supabase.auth.signInWithOtp({
+    email,
+    options: {
+      // missä käyttäjä palaa linkin kautta
+      emailRedirectTo: `${window.location.origin}/auth/callback`,
+    }
+  });
+  if (error) throw error;
+  return data;
+}

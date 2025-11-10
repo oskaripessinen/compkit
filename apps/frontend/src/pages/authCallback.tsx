@@ -51,7 +51,6 @@ export default function AuthCallback() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="text-red-500 mb-4">⚠️</div>
           <p className="text-muted-foreground">Authentication failed: {error}</p>
           <p className="text-sm text-muted-foreground mt-2">Redirecting...</p>
         </div>
