@@ -24,6 +24,9 @@ importers:
 
   apps/backend:
     dependencies:
+      '@codesandbox/sandpack-react':
+        specifier: ^2.20.0
+        version: 2.20.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@compkit/types':
         specifier: workspace:*
         version: link:../../packages/types

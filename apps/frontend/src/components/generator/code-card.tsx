@@ -1,18 +1,9 @@
-import { useState } from "react";
-import { LiveProvider, LiveEditor } from 'react-live';
+import { useState, useMemo } from "react";
 import { Copy, CopyCheck, Loader2, Code } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { themes } from 'prism-react-renderer';
+import { SandpackCodeEditor, SandpackProvider } from '@codesandbox/sandpack-react';
 
-const customTheme = {
-  ...themes.vsDark,
-  plain: {
-    ...themes.vsDark.plain,
-    backgroundColor: 'oklch(17.304% 0.00002 271.152)',
-    color: '#ffffff',
-  },
-};
 
 const CodeCard = ({ 
   generatedCode, 
@@ -36,6 +27,17 @@ const CodeCard = ({
     }
   };
 
+  const sandpackFiles = useMemo(() => {
+    if (!displayCode) return null;
+    
+    return {
+      "/App.tsx": {
+        code: displayCode,
+        active: true,
+      },
+    };
+  }, [displayCode]);
+
   return (
     <div className="flex flex-col rounded-2xl border border-border/50 bg-card shadow-lg shadow-black/10 h-full max-h-[60vh] md:max-h-[500px] ring-1 ring-white/5">
       <div className="flex items-center justify-between border-b border-border px-4 h-12">
@@ -50,15 +52,20 @@ const CodeCard = ({
         )}
       </div>
 
-      <div className="flex-1 overflow-hidden rounded-b-2xl bg-card">
-        {displayCode ? (
-          <LiveProvider code={displayCode} noInline={true} theme={customTheme}>
-            <div className="h-full overflow-auto">
-              <LiveEditor 
-                className="min-h-[10vh] md:min-h-[200px] p-4 font-mono text-sm leading-relaxed bg-card" 
-              />
-            </div>
-          </LiveProvider>
+      <div className="flex-1 overflow-hidden rounded-b-2xl">
+        {sandpackFiles ? (
+          <SandpackProvider
+            template="react-ts"
+            files={sandpackFiles}
+            theme="dark"
+          >
+            <SandpackCodeEditor
+              showLineNumbers
+              showInlineErrors
+              wrapContent
+              style={{ height: '100%' }}
+            />
+          </SandpackProvider>
         ) : (
           <div className="flex items-center justify-center flex-col gap-3 h-full p-6">
             <Loader2 size={24} className="animate-spin" />

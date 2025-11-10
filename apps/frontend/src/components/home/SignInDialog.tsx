@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { InputOTP, InputOTPSlot, InputOTPGroup } from "../ui/input-otp";
-import { sendEmailOtp } from "@/api/client";
+import { sendEmailOtp, verifyEmailOtp } from "@/api/client";
 import { Loader2 } from "lucide-react";
 
 export const SignInDialog = ({
@@ -31,7 +31,6 @@ export const SignInDialog = ({
 
     try {
       await sendEmailOtp(email);
-      // show OTP view after successful send
       setOTP(true);
     } catch (err) {
       console.error("Failed to send OTP:", err);
@@ -40,10 +39,18 @@ export const SignInDialog = ({
     }
   };
 
-  const handleOTPVerify = () => {
-    console.log("Verifying OTP:", value);
-    setValue("");
-    setOTP(false);
+  const handleOTPVerify = async () => {
+    if (!value.trim()) return;
+    setLoading(true);
+
+
+    const data = await verifyEmailOtp(email.trim(), value.trim());
+
+    if (data.session) {
+      window.location.href = '/generator';
+    }
+
+
   };
 
   return (
@@ -57,7 +64,7 @@ export const SignInDialog = ({
     }}>
       <DialogTrigger asChild>{trigger ?? <Button variant="default">Try it now</Button>}</DialogTrigger>
 
-      <DialogContent className={`border border-border gap-0 shadow-lg shadow-black/10 ${OTP ? 'h-45' : 'h-65'}`}>
+      <DialogContent className={`border border-border gap-2 shadow-lg shadow-black/10 ${OTP ? 'h-45' : 'h-60'}`}>
         <DialogHeader>
           <DialogTitle>{`${OTP ? "Verify OTP" : "Sign In"}`}</DialogTitle>
         </DialogHeader>
@@ -65,8 +72,7 @@ export const SignInDialog = ({
             {OTP ? ("Enter the one-time password sent to your email to continue.") : ("Sign in with your email to continue.")}
         </DialogDescription>
 
-        {/* sign-in view (fades out when OTP is true) */}
-        <div className={`flex flex-col gap-4 mt-2 transition-opacity duration-300 ${OTP ? 'opacity-0 h-0 pointer-events-none' : 'opacity-100'}`}>
+        <div className={`flex flex-col gap-4 mt-2 ${OTP ? 'opacity-0 h-0 pointer-events-none' : 'opacity-100'}`}>
           <div className="flex flex-row gap-3">
             <Input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
             <Button
@@ -98,7 +104,6 @@ export const SignInDialog = ({
           </Button>
         </div>
 
-        {/* OTP view (fades in when OTP is true) */}
         <div className={`flex flex-col gap-4 items-center mt-2 transition-opacity duration-300 ${OTP ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
           <div className="flex items-center gap-6">
             <div className="min-w-0">
@@ -124,7 +129,7 @@ export const SignInDialog = ({
                 onClick={handleOTPVerify}
                 disabled={value.length < 6}
               >
-                Submit
+                {loading ? <Loader2 className="animate-spin size-4" /> : "Submit"}
               </Button>
             </div>
           </div>

@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@codesandbox/sandpack-react": "^2.20.0",
     "@compkit/types": "workspace:*",
     "@supabase/supabase-js": "^2.76.1",
     "archiver": "^7.0.1",

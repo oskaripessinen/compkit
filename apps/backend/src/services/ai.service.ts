@@ -120,14 +120,37 @@ export class AIService {
       .replace(/<think>[\s\S]*?<\/think>/g, "")
       .replace(/```(?:jsx?|tsx?|javascript|typescript)?\n?/g, "")
       .replace(/```\n?/g, "")
-      .replace(/\/\*[\s\S]*?\*\//g, "")
-      .replace(/\/\/.*/g, "")
-      .replace(/^.*?(?=\(\s*\)\s*=>)/s, "")
       .trim();
 
-    cleaned = cleaned.replace(/^export\s+(const\s+\w+\s*=\s*)?/gm, "");
+    // Wrappaa anonymous componentit
+    cleaned = this.wrapAnonymousComponents(cleaned);
 
     return cleaned;
+  }
+
+  private static wrapAnonymousComponents(code: string): string {
+    // Jos koodi alkaa () => tai function, wrappaa se named functioniin
+    const anonymousArrowRegex = /^\s*\(\s*\)\s*=>\s*{/;
+    const anonymousFunctionRegex = /^\s*function\s*\(/;
+    
+    if (anonymousArrowRegex.test(code) || anonymousFunctionRegex.test(code)) {
+      // Ekstraoi component nimi commentista tai käytä oletusta
+      const nameMatch = code.match(/\/\/\s*(\w+)/);
+      const componentName = nameMatch ? nameMatch[1] : 'Component';
+      
+      return `const ${componentName} = ${code}\n\nexport default ${componentName};`;
+    }
+    
+    // Jos koodi ei sisällä export default, lisää se
+    if (!code.includes('export default')) {
+      const nameMatch = code.match(/const\s+(\w+)\s*=/);
+      if (nameMatch) {
+        const componentName = nameMatch[1];
+        return `${code}\n\nexport default ${componentName};`;
+      }
+    }
+    
+    return code;
   }
 
   static parseComponents(code: string): Array<{ name: string; code: string }> {
