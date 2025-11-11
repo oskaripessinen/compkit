@@ -1,11 +1,9 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Codesandbox } from 'lucide-react';
 import { useMemo } from 'react';
-import { SandpackPreview, SandpackProvider } from '@codesandbox/sandpack-react';
 
 
 const PreviewCard = ({ 
-  generatedCode, 
   components, 
   selectedComponent, 
   setSelectedComponent 
@@ -16,40 +14,41 @@ const PreviewCard = ({
   setSelectedComponent: (index: number) => void;
 }) => {
   const currentComponent = components[selectedComponent];
-  const displayCode = currentComponent ? currentComponent.code : generatedCode;
   
-  const sandpackFiles = useMemo(() => {
-    if (!displayCode) return null;
+  const previewHtml = useMemo(() => {
+    if (!currentComponent) return null;
     
-    return {
-      "/App.tsx": {
-        code: displayCode,
-      },
-      "/index.tsx": {
-        code: `import React from 'react';
-import { createRoot } from 'react-dom/client';
-import App from './App';
-import './styles.css';
+    // Transform JSX to createElement calls (simple regex-based transformation)
+    const jsxCode = currentComponent.code
+      .replace(/export\s+default\s+\w+;?\s*$/gm, '')
+      .replace(/const\s+(\w+)\s*=\s*\(\s*\)\s*=>\s*\{?\s*return\s*\(/gm, 'function $1() { return (')
+      .replace(/const\s+(\w+)\s*=\s*\(\s*\)\s*=>\s*/gm, 'function $1() { return ')
+      .trim();
 
-const root = createRoot(document.getElementById('root')!);
-root.render(<App />);`,
-      },
-      "/styles.css": {
-        code: `@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}`,
-      },
-    };
-  }, [displayCode]);
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { margin: 0; padding: 2rem; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: oklch(17.304% 0.00002 271.152); }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    ${jsxCode}
+    
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(React.createElement(${currentComponent.name}));
+  </script>
+</body>
+</html>`;
+  }, [currentComponent]);
 
   return (
     <div className="flex flex-col rounded-2xl border border-border/50 bg-card shadow-lg shadow-black/10 h-full max-h-[60vh] md:max-h-[550px] ring-1 ring-white/5">
@@ -73,24 +72,15 @@ body {
           </Select>
         )}
       </div>
-      <div className="flex-1 rounded-b-2xl overflow-hidden">
-        {sandpackFiles ? (
-          <SandpackProvider
-            template="react-ts"
-            files={sandpackFiles}
-            theme="dark"
-            customSetup={{
-              dependencies: {
-                "tailwindcss": "latest",
-              },
-            }}
-          >
-            <SandpackPreview
-              showOpenInCodeSandbox={false}
-              showRefreshButton={false}
-              style={{ height: '100%' }}
-            />
-          </SandpackProvider>
+      <div className="flex-1 rounded-b-2xl overflow-hidden bg-card">
+        {previewHtml ? (
+          <iframe
+            srcDoc={previewHtml}
+            className="w-full h-full border-0 bg-card"
+            sandbox="allow-scripts allow-same-origin"
+            title="Component Preview"
+            
+          />
         ) : (
           <div className="flex items-center justify-center flex-col gap-3 h-full">
             <Loader2 size={24} className="animate-spin" />

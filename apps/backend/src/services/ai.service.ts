@@ -48,6 +48,28 @@ export class AIService {
 
       const cleanedCode = this.cleanCode(generatedCode);
 
+      // Split by "export default" — jokainen komponentti päättyy "export default ComponentName;"
+      const componentBlocks = cleanedCode.split(/(?=const\s+\w+\s*=)/g)
+        .map(block => block.trim())
+        .filter(block => block.length > 0);
+      
+      const parsedComponents = componentBlocks.map(block => {
+        // Varmista että block sisältää export default
+        if (!block.includes('export default')) {
+          const nameMatch = block.match(/const\s+(\w+)\s*=/);
+          if (nameMatch) {
+            const componentName = nameMatch[1];
+            block = `${block}\n\nexport default ${componentName};`;
+          }
+        }
+        
+        // Ekstraoi nimi
+        const nameMatch = block.match(/const\s+(\w+)\s*=/);
+        const name = nameMatch ? nameMatch[1] : this.detectComponentType(block);
+        
+        return { name, code: block };
+      });
+
       // Save to database and create library
       const { library, components } = await ComponentLibraryService.createLibraryFromGeneration(
         userId,
@@ -59,7 +81,7 @@ export class AIService {
       return {
         code: cleanedCode,
         library,
-        components,
+        components: parsedComponents, // return parsed components from our parsing
       };
     } catch (error: any) {
       console.error("OpenRouter API Error:", error);
@@ -103,7 +125,6 @@ export class AIService {
 
       const cleanedCode = this.cleanCode(modifiedCode);
 
-      // Update component in database if userId and componentId are provided
       if (userId && componentId) {
         await ComponentLibraryService.updateComponent(userId, componentId, cleanedCode);
       }
@@ -129,19 +150,16 @@ export class AIService {
   }
 
   private static wrapAnonymousComponents(code: string): string {
-    // Jos koodi alkaa () => tai function, wrappaa se named functioniin
     const anonymousArrowRegex = /^\s*\(\s*\)\s*=>\s*{/;
     const anonymousFunctionRegex = /^\s*function\s*\(/;
     
     if (anonymousArrowRegex.test(code) || anonymousFunctionRegex.test(code)) {
-      // Ekstraoi component nimi commentista tai käytä oletusta
       const nameMatch = code.match(/\/\/\s*(\w+)/);
       const componentName = nameMatch ? nameMatch[1] : 'Component';
       
       return `const ${componentName} = ${code}\n\nexport default ${componentName};`;
     }
     
-    // Jos koodi ei sisällä export default, lisää se
     if (!code.includes('export default')) {
       const nameMatch = code.match(/const\s+(\w+)\s*=/);
       if (nameMatch) {

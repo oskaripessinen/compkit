@@ -243,7 +243,7 @@ const Generator = () => {
           </div>
         )}
 
-          <div className={`flex flex-col transition-all duration-500 ease-in-out md:static ${conversationMode ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none md:pointer-events-auto'}`}>
+          <div className={`flex flex-col transition-all duration-800 ease-in-out md:static ${conversationMode ? 'translate-y-0 opacity-100' : 'opacity-0 pointer-events-none md:pointer-events-auto'}`}>
             <div className="flex justify-end mb-4 md:mb-5">
               <Dialog>
                 <DialogTrigger asChild>
@@ -299,7 +299,7 @@ const Generator = () => {
             <div className={`transition-all duration-500 ${conversationMode ? 'opacity-0 h-0 overflow-hidden' : 'opacity-100'}`}>
               <span className={`text-3xl font-sans transition-all duration-500`}>Explain your idea</span>
             </div>
-            <ButtonGroup className={`[--radius:1rem] justify-center w-full max-w-[900px] transition-all duration-500`}>
+            <ButtonGroup className={`[--radius:1rem] justify-center w-full ${conversationMode ? 'w-5xl' : 'w-3xl'} transition-all duration-500`}>
               <ButtonGroup className="flex-1">
                 <div className="bg-card rounded-l-2xl flex items-center justify-center px-2 border-r-0 border border-border">
                   <DropdownMenu>

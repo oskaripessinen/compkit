@@ -39,8 +39,8 @@ const CodeCard = ({
   }, [displayCode]);
 
   return (
-    <div className="flex flex-col rounded-2xl border border-border/50 bg-card shadow-lg shadow-black/10 h-full max-h-[60vh] md:max-h-[500px] ring-1 ring-white/5">
-      <div className="flex items-center justify-between border-b border-border px-4 h-12">
+    <div className="flex flex-col rounded-2xl border border-border/50 bg-card shadow-lg shadow-black/10 h-full max-h-[400px] ring-1 ring-white/5">
+      <div className="flex items-center justify-between border-b border-border px-4 h-12 shrink-0">
         <div className="flex items-center gap-2 h-8">
           <Code className="size-5" stroke='#a4a4a4' />
           <span className="text-sm font-medium text-foreground">Code</span>
@@ -52,18 +52,26 @@ const CodeCard = ({
         )}
       </div>
 
-      <div className="flex-1 overflow-hidden rounded-b-2xl">
+      <div className="flex-1 overflow-y-auto rounded-b-2xl min-h-0">
         {sandpackFiles ? (
           <SandpackProvider
             template="react-ts"
             files={sandpackFiles}
-            theme="dark"
+            theme={{
+            colors: {
+              surface1: "oklch(17.304% 0.00002 271.152)", // taustaväri
+              surface2: "#161b22",
+              surface3: "#21262d",
+              clickable: "#58a6ff",
+              base: "#c9d1d9",
+            },
+          }}
           >
             <SandpackCodeEditor
               showLineNumbers
               showInlineErrors
               wrapContent
-              style={{ height: '100%' }}
+              style={{ height: '100%', maxHeight: '100%', overflow: 'auto' }}
             />
           </SandpackProvider>
         ) : (
