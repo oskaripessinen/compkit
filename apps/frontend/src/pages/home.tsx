@@ -1,5 +1,4 @@
 import { supabase } from "@/lib/supabase"
-import { Showcase } from "@/components/home/showcase"
 import { Footer } from "@/components/home/footer"
 import { Hero } from "@/components/home/hero"
 
@@ -21,7 +20,6 @@ const Home = () => {
   return (
     <div className="min-h-dvh bg-background text-foreground">
       <Hero signInWithGoogle={signInWithGoogle} />
-      <Showcase signInWithGoogle={signInWithGoogle} />
       <Footer />
     </div>
   ) 

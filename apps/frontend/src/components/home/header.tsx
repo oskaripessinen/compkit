@@ -14,14 +14,25 @@ const Header = ({ signInWithGoogle }: { signInWithGoogle: () => void | Promise<v
           <Button size='sm' variant='ghost'>GitHub</Button>
         </nav>
 
-        <SignInDialog
-          signInWithGoogle={signInWithGoogle}
-          trigger={
-            <Button variant="outline" className="border-border text-foreground hover:bg-muted">
-              Sign In
-            </Button>
-          }
-        />
+
+        <div className="flex items-center gap-2">
+          <SignInDialog
+            signInWithGoogle={signInWithGoogle}
+            trigger={
+              <Button variant="secondary" className="border-white/10 border text-foreground hover:bg-secondary/80">
+                Sign In
+              </Button>
+            }
+          />
+          <SignInDialog
+            signInWithGoogle={signInWithGoogle}
+            trigger={
+              <Button variant="default">
+                Get started
+              </Button>
+            }
+          />
+        </div>
 
         <button
           aria-label="Toggle menu"
