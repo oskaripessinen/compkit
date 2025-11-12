@@ -9,7 +9,7 @@ export const config = {
   openRouter: {
     apiKey: process.env.OPEN_ROUTER_API,
     baseUrl: "https://openrouter.ai/api/v1",
-    model: "qwen/qwen-2.5-coder-32b-instruct:free",
+    model: "kwaipilot/kat-coder-pro:free",
   },
   supabase: {
     url: process.env.SUPABASE_URL || "",

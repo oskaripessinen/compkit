@@ -21,7 +21,7 @@ const Home = () => {
   return (
     <div className="min-h-dvh bg-background text-foreground">
       <Hero signInWithGoogle={signInWithGoogle} />
-      <Showcase />
+      <Showcase signInWithGoogle={signInWithGoogle} />
       <Footer />
     </div>
   ) 
