@@ -17,12 +17,52 @@ export class AIService {
     code: string;
     library: any;
     components: any[];
+    css: string;
   }> {
     if (!config.openRouter.apiKey) {
       throw new Error("OPENROUTER_API_KEY not configured");
     }
 
     try {
+      // Read base components
+      const fs = require('fs').promises;
+      const path = require('path');
+      const basePath = path.join(__dirname, '../base');
+      
+      const [button, card, input, modal, table, css] = await Promise.all([
+        fs.readFile(path.join(basePath, 'button.tsx'), 'utf-8'),
+        fs.readFile(path.join(basePath, 'card.tsx'), 'utf-8'),
+        fs.readFile(path.join(basePath, 'input.tsx'), 'utf-8'),
+        fs.readFile(path.join(basePath, 'modal.tsx'), 'utf-8'),
+        fs.readFile(path.join(basePath, 'table.tsx'), 'utf-8'),
+        fs.readFile(path.join(basePath, 'index.css'), 'utf-8'),
+      ]);
+
+      const baseComponentsPrompt = `
+BASE COMPONENTS TO MODIFY:
+
+=== Button.tsx ===
+${button}
+
+=== Card.tsx ===
+${card}
+
+=== Input.tsx ===
+${input}
+
+=== Modal.tsx ===
+${modal}
+
+=== Table.tsx ===
+${table}
+
+=== index.css ===
+${css}
+
+USER STYLE REQUEST: ${prompt}
+
+Modify the components and CSS to match the user's style request. Return as JSON with "components" and "css" keys.`;
+
       const response = await this.client.chat.completions.create({
         model: config.openRouter.model,
         messages: [
@@ -32,56 +72,48 @@ export class AIService {
           },
           {
             role: "user",
-            content: prompt,
+            content: baseComponentsPrompt,
           },
         ],
-        max_tokens: 3000,
+        max_tokens: 8000,
         temperature: 0.5,
         top_p: 0.9,
+        response_format: { type: "json_object" },
       });
 
-      const generatedCode = response.choices[0]?.message?.content?.trim();
+      const generatedContent = response.choices[0]?.message?.content?.trim();
 
-      if (!generatedCode) {
+      if (!generatedContent) {
         throw new Error("No code generated from AI");
       }
 
-      const cleanedCode = this.cleanCode(generatedCode);
+      const parsed = JSON.parse(generatedContent);
+      const componentsObj = parsed.components;
+      const modifiedCss = parsed.css;
 
-      // Split by "export default" — jokainen komponentti päättyy "export default ComponentName;"
-      const componentBlocks = cleanedCode.split(/(?=const\s+\w+\s*=)/g)
-        .map(block => block.trim())
-        .filter(block => block.length > 0);
-      
-      const parsedComponents = componentBlocks.map(block => {
-        // Varmista että block sisältää export default
-        if (!block.includes('export default')) {
-          const nameMatch = block.match(/const\s+(\w+)\s*=/);
-          if (nameMatch) {
-            const componentName = nameMatch[1];
-            block = `${block}\n\nexport default ${componentName};`;
-          }
-        }
-        
-        // Ekstraoi nimi
-        const nameMatch = block.match(/const\s+(\w+)\s*=/);
-        const name = nameMatch ? nameMatch[1] : this.detectComponentType(block);
-        
-        return { name, code: block };
-      });
+      // Transform components object to array format
+      const parsedComponents = Object.entries(componentsObj).map(([name, code]) => ({
+        name,
+        code: code as string,
+      }));
+
+      // Combine all component code for storage
+      const allCode = parsedComponents.map(c => c.code).join('\n\n');
+      const fullCode = `${modifiedCss}\n\n/* Components */\n\n${allCode}`;
 
       // Save to database and create library
-      const { library, components } = await ComponentLibraryService.createLibraryFromGeneration(
+      const { library, components: dbComponents } = await ComponentLibraryService.createLibraryFromGeneration(
         userId,
         prompt,
-        cleanedCode,
+        fullCode,
         libraryName
       );
 
       return {
-        code: cleanedCode,
+        code: fullCode,
         library,
-        components: parsedComponents, // return parsed components from our parsing
+        components: parsedComponents,
+        css: modifiedCss,
       };
     } catch (error: any) {
       console.error("OpenRouter API Error:", error);
@@ -94,12 +126,22 @@ export class AIService {
     modificationRequest: string,
     userId?: string,
     componentId?: string
-  ): Promise<string> {
+  ): Promise<{
+    code: string;
+    components: any[];
+    css: string;
+  }> {
     if (!config.openRouter.apiKey) {
       throw new Error("OPENROUTER_API_KEY not configured");
     }
 
     try {
+      // Read base CSS
+      const fs = require('fs').promises;
+      const path = require('path');
+      const basePath = path.join(__dirname, '../base');
+      const css = await fs.readFile(path.join(basePath, 'index.css'), 'utf-8');
+
       const response = await this.client.chat.completions.create({
         model: config.openRouter.model,
         messages: [
@@ -109,27 +151,36 @@ export class AIService {
           },
           {
             role: "user",
-            content: `Current component:\n${currentCode}\n\nModification request: ${modificationRequest}`,
+            content: `Current component:\n${currentCode}\n\nCurrent CSS:\n${css}\n\nModification request: ${modificationRequest}\n\nReturn as JSON with "component" and "css" keys.`,
           },
         ],
         max_tokens: 2000,
         temperature: 0.3,
         top_p: 0.9,
+        response_format: { type: "json_object" },
       });
 
-      const modifiedCode = response.choices[0]?.message?.content?.trim();
+      const modifiedContent = response.choices[0]?.message?.content?.trim();
 
-      if (!modifiedCode) {
+      if (!modifiedContent) {
         throw new Error("No modified code generated from AI");
       }
 
-      const cleanedCode = this.cleanCode(modifiedCode);
+      const parsed = JSON.parse(modifiedContent);
+      const cleanedCode = this.cleanCode(parsed.component || modifiedContent);
+      const modifiedCss = parsed.css || css;
 
       if (userId && componentId) {
         await ComponentLibraryService.updateComponent(userId, componentId, cleanedCode);
       }
 
-      return cleanedCode;
+      const components = this.parseComponents(cleanedCode);
+
+      return {
+        code: cleanedCode,
+        components,
+        css: modifiedCss,
+      };
     } catch (error: any) {
       console.error("OpenRouter API Error:", error);
       throw new Error(error.message || "Failed to modify component");
@@ -235,7 +286,6 @@ export class AIService {
     if (lowerCode.includes('<button')) return 'Button';
     if (lowerCode.includes('<input')) return 'Input';
     if (lowerCode.includes('<textarea')) return 'Textarea';
-    if (lowerCode.includes('<header') || lowerCode.includes('<nav')) return 'Navbar';
     if (lowerCode.includes('modal') || lowerCode.includes('dialog')) return 'Modal';
     if (lowerCode.includes('<span') && lowerCode.includes('badge')) return 'Badge';
     if (lowerCode.includes('card') || (lowerCode.includes('<div') && lowerCode.includes('rounded'))) return 'Card';

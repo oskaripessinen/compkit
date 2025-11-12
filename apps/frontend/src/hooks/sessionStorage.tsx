@@ -32,6 +32,7 @@ export function useGeneratorState() {
   const [components, setComponents] = useSessionStorage<Array<{ name: string; code: string }>>('generator-components', []);
   const [selectedComponent, setSelectedComponent] = useSessionStorage('generator-selected', 0);
   const [conversationMode, setConversationMode] = useSessionStorage('generator-conversation-mode', false);
+  const [css, setCss] = useSessionStorage<string>('generator-css', '');
 
   const clearState = () => {
     sessionStorage.removeItem('generator-prompt');
@@ -39,11 +40,13 @@ export function useGeneratorState() {
     sessionStorage.removeItem('generator-components');
     sessionStorage.removeItem('generator-selected');
     sessionStorage.removeItem('generator-conversation-mode');
+    sessionStorage.removeItem('generator-css');
     setPrompt('');
     setGeneratedCode(null);
     setComponents([]);
     setSelectedComponent(0);
     setConversationMode(false);
+    setCss('');
   };
 
   const loadLibraryToState = (library: LibraryWithComponents) => {
@@ -84,6 +87,8 @@ export function useGeneratorState() {
     setSelectedComponent,
     conversationMode,
     setConversationMode,
+    css,
+    setCss,
     clearState,
     loadLibraryToState,
   };

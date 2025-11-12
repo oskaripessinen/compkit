@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Copy, CopyCheck, Loader2, Code } from "lucide-react";
+import { Copy, CopyCheck, Code } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { SandpackCodeEditor, SandpackProvider } from '@codesandbox/sandpack-react';
@@ -76,7 +76,6 @@ const CodeCard = ({
           </SandpackProvider>
         ) : (
           <div className="flex items-center justify-center flex-col gap-3 h-full p-6">
-            <Loader2 size={24} className="animate-spin" />
             <p className="text-sm text-muted-foreground">Generated code will appear here</p>
           </div>
         )}

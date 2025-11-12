@@ -64,19 +64,17 @@ export function AppSidebar({
                         <div className="px-2 py-1 text-xs text-muted-foreground">No projects yet</div>
                       ) : (
                         libraries.map((project) => (
-                          <div key={project.id} className="group/item flex items-center">
+                          <div key={project.id} className="group/item flex items-center gap-1">
                             <SidebarMenuButton
-                              className="cursor-pointer flex-1 justify-between truncate"
+                              className="cursor-pointer flex-1 truncate"
                               onClick={() => handleLoadProject(project.id)}
                             >
                               <span className="text-xs font-medium">{project.name}</span>
-                              <ProjectDropdown 
+                            </SidebarMenuButton>
+                            <ProjectDropdown 
                               projectId={project.id} 
                               projectName={project.name || 'Untitled'} 
                             />
-                            </SidebarMenuButton>
-                            
-                            
                           </div>
                         ))
                       )}

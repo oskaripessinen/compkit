@@ -27,6 +27,7 @@ router.post("/components/generate", optionalAuthMiddleware, async (req, res) => 
       success: true,
       code: result.code,
       components: result.components || AIService.parseComponents(result.code),
+      css: result.css,
       library: result.library, // Now includes LibraryWithComponents
       model: config.openRouter.model,
     } as GenerateResponse);
@@ -53,18 +54,18 @@ router.post("/components/modify", optionalAuthMiddleware, async (req, res) => {
   }
 
   try {
-    const code = await AIService.modifyComponent(
+    const result = await AIService.modifyComponent(
       currentCode, 
       modificationRequest,
       userId,
       componentId
     );
-    const components = AIService.parseComponents(code);
 
     res.json({
       success: true,
-      code,
-      components,
+      code: result.code,
+      components: result.components,
+      css: result.css,
       model: config.openRouter.model,
     } as GenerateResponse);
 

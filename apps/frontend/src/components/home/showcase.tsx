@@ -16,11 +16,10 @@ const Showcase = ({ signInWithGoogle }: { signInWithGoogle: () => void | Promise
   
   const components = [
     { name: "Button", delay: 0 },
-    { name: "Card", delay: 0.2 },
-    { name: "Navbar", delay: 0.4 },
-    { name: "Input", delay: 0.6 },
-    { name: "Modal", delay: 0.8 },
-    { name: "Table", delay: 1.0 },
+  { name: "Card", delay: 0.2 },
+  { name: "Input", delay: 0.4 },
+  { name: "Modal", delay: 0.6 },
+  { name: "Table", delay: 0.8 },
   ];
   
   // Intersection Observer to detect when section is visible
@@ -131,20 +130,6 @@ const Showcase = ({ signInWithGoogle }: { signInWithGoogle: () => void | Promise
                           <div className="w-full h-16 bg-[rgba(255,255,255,0.03)] rounded-lg shadow-inner"></div>
                           <div className="w-3/4 h-2 bg-[rgba(255,255,255,0.06)] rounded-full"></div>
                           <div className="w-1/2 h-2 bg-[rgba(255,255,255,0.03)] rounded-full"></div>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {component.name === "Navbar" && (
-                      <div className="space-y-2">
-                        <div className="text-[10px] font-semibold text-[#A1A1A1] uppercase tracking-wide">Navbar</div>
-                        <div className="flex items-center justify-between bg-[#141414] border border-[rgba(255,255,255,0.06)] rounded-lg p-3 shadow-[0_0_20px_rgba(255,255,255,0.05)]">
-                          <div className="w-6 h-6 bg-[rgba(255,255,255,0.06)] rounded shadow-[0_0_10px_rgba(255,255,255,0.08)]"></div>
-                          <div className="flex gap-2">
-                            <div className="w-8 h-2 bg-[rgba(255,255,255,0.03)] rounded-full"></div>
-                            <div className="w-8 h-2 bg-[rgba(255,255,255,0.03)] rounded-full"></div>
-                            <div className="w-8 h-2 bg-[rgba(255,255,255,0.03)] rounded-full"></div>
-                          </div>
                         </div>
                       </div>
                     )}

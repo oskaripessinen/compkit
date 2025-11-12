@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Header } from "./header";
 import { SignInDialog } from "./SignInDialog";
-import { ArrowRight, Zap, Code2, Sparkles } from "lucide-react";
+import { ArrowRight, Zap, Code2 } from "lucide-react";
 
 const Hero = ({ signInWithGoogle }: { signInWithGoogle: () => void | Promise<void> }) => {
   const scrollToShowcase = () => {
@@ -46,10 +46,6 @@ const Hero = ({ signInWithGoogle }: { signInWithGoogle: () => void | Promise<voi
               <div className="flex items-center gap-2 text-sm text-[#A1A1A1] bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.06)] rounded-lg px-3 py-2">
                 <Zap className="size-4" />
                 <span>Tailwind CSS</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-[#A1A1A1] bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.06)] rounded-lg px-3 py-2">
-                <Sparkles className="size-4" />
-                <span>shadcn/ui Compatible</span>
               </div>
             </div>
 

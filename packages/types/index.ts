@@ -54,6 +54,7 @@ export interface GenerateResponse {
     name: string;
     code: string;
   }>;
+  css?: string; // CSS generated/modified by AI
   library?: LibraryWithComponents; // Added optional library
   model: string;
 }

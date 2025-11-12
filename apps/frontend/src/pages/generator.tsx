@@ -58,6 +58,8 @@ const Generator = () => {
     setSelectedComponent,
     conversationMode,
     setConversationMode,
+    css,
+    setCss,
   } = useGeneratorState();
 
   const handleLoadLibrary = (library: LibraryWithComponents) => {
@@ -134,6 +136,7 @@ const Generator = () => {
       const response = await generateComponent(prompt);
       setGeneratedCode(response.code);
       setComponents(response.components || []);
+      setCss(response.css || '');
       setSelectedComponent(0);
       setFollowupPrompt("");
       
@@ -182,6 +185,7 @@ const Generator = () => {
      setComponents(modifiedComponents);
       
       setGeneratedCode(response.code);
+      setCss(response.css || '');
       setFollowupPrompt("");
     } catch (err) {
       setError('Failed to modify component');
@@ -284,6 +288,7 @@ const Generator = () => {
                 components={components}
                 selectedComponent={selectedComponent}
                 setSelectedComponent={setSelectedComponent}
+                css={css}
               />
               <CodeCard 
                 generatedCode={generatedCode}
