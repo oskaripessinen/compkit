@@ -12,14 +12,16 @@ export class ComponentLibraryService {
     userId: string,
     prompt: string,
     generatedCode: string,
-    libraryName?: string
+    libraryName?: string,
+    css?: string,
+    preParsedComponents?: Array<{ name: string; code: string }>
   ): Promise<{
     library: any;
     components: any[];
   }> {
     try {
-      // Parse components from generated code
-      const parsedComponents = AIService.parseComponents(generatedCode);
+      // Use pre-parsed components if provided (from AI response), otherwise parse from code
+      const parsedComponents = preParsedComponents || AIService.parseComponents(generatedCode);
 
       // Generate library name from prompt if not provided
       const finalLibraryName = libraryName || this.generateLibraryName(prompt);
@@ -30,6 +32,7 @@ export class ComponentLibraryService {
         .insert({
           user_id: userId,
           name: finalLibraryName,
+          css: css,
         })
         .select()
         .single();
@@ -193,6 +196,7 @@ export class ComponentLibraryService {
       const formattedLibraries = libraries.map((lib) => ({
         ...lib,
         components: lib.library_components.map((lc: any) => lc.component),
+        css: lib.css || '',
       }));
 
       return formattedLibraries;
@@ -230,7 +234,10 @@ export class ComponentLibraryService {
       // Flatten the structure
       const formattedLibrary = {
         ...library,
-        components: library.library_components.map((lc: any) => lc.component),
+        components: library.library_components
+          .map((lc: any) => lc.component)
+          .filter((c: any) => c !== null), // Ensure nulls from failed joins are removed
+        css: library.css || '',
       };
 
       return formattedLibrary;

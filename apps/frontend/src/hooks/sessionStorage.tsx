@@ -55,23 +55,42 @@ export function useGeneratorState() {
       return;
     }
 
-    // Combine all component codes
-    const combinedCode = library.components
+    // Separate CSS from component code
+    const componentCode = library.components
       .map(component => component.code)
       .join('\n\n');
 
+    // Use library's CSS if available, otherwise extract from component code
+    let css = library.css || '';
+    let cleanComponentCode = componentCode;
+
+    if (!css) {
+      // Extract CSS from the beginning (before first import or component definition)
+      const importIndex = componentCode.indexOf('import');
+      if (importIndex > 0) {
+        css = componentCode.substring(0, importIndex).trim();
+        cleanComponentCode = componentCode.substring(importIndex);
+      }
+    }
+
     // Map components to the expected format
-    const formattedComponents = library.components.map(component => ({
-      name: component.name,
-      code: component.code,
-    }));
+    const formattedComponents = library.components.map(component => {
+      // Keep the code as is from database, don't try to strip anything
+      // The backend now handles CSS separation and cleanup properly
+      return {
+        name: component.name,
+        code: component.code,
+      };
+    });
+    console.log('formattedComponents', formattedComponents);
 
     // Update session storage with library data
     setPrompt(`Loaded from library: ${library.name || 'Untitled'}`);
-    setGeneratedCode(combinedCode);
+    setGeneratedCode(cleanComponentCode);
     setComponents(formattedComponents);
     setSelectedComponent(0);
     setConversationMode(true);
+    setCss(css);
 
     console.log(`Loaded library "${library.name}" with ${formattedComponents.length} components`);
   };

@@ -27,7 +27,14 @@ export function AppSidebar({
       const response = await getLibraryById(libraryId);
       
       if (onLoadLibrary) {
-        onLoadLibrary(response.library);
+        // If components are missing from the library object but exist in the response
+        // ensure they are passed correctly
+        const libraryToLoad = {
+          ...response.library,
+          components: response.library.components || []
+        };
+        
+        onLoadLibrary(libraryToLoad);
       }
     } catch (error) {
       console.error('Failed to load project:', error);
@@ -66,15 +73,16 @@ export function AppSidebar({
                         libraries.map((project) => (
                           <div key={project.id} className="group/item flex items-center gap-1">
                             <SidebarMenuButton
-                              className="cursor-pointer flex-1 truncate"
+                              className="cursor-pointer flex-1 truncate justify-between"
                               onClick={() => handleLoadProject(project.id)}
                             >
-                              <span className="text-xs font-medium">{project.name}</span>
-                            </SidebarMenuButton>
-                            <ProjectDropdown 
+                              <span className="text-xs max-w-30 overflow-hidden text-ellipsis font-medium">{project.name}</span>
+                              <ProjectDropdown 
                               projectId={project.id} 
                               projectName={project.name || 'Untitled'} 
                             />
+                            </SidebarMenuButton>
+                            
                           </div>
                         ))
                       )}

@@ -28,18 +28,28 @@ const PreviewCard = ({
           .filter(Boolean)
       );
 
-    const exportedNames = Array.from(
-      currentComponent.code.matchAll(/export\s*\{([^}]+)\}/g)
-    )
-      .flatMap((match) =>
-        match[1]
-          .split(",")
-          .map((token) => token.trim())
-          .filter(Boolean)
+    const exportedNames = [
+      ...Array.from(
+        currentComponent.code.matchAll(/export\s*\{([^}]+)\}/g)
       )
-      .map((name) => name.replace(/^type\s+/i, ""))
-      .map((name) => name.split(/\s+as\s+/i)[0]?.trim() ?? name)
-      .filter((name, index, self) => name && self.indexOf(name) === index);
+        .flatMap((match) =>
+          match[1]
+            .split(",")
+            .map((token) => token.trim())
+            .filter(Boolean)
+        )
+        .map((name) => name.replace(/^type\s+/i, ""))
+        .map((name) => name.split(/\s+as\s+/i)[0]?.trim() ?? name),
+      ...Array.from(
+        currentComponent.code.matchAll(/export\s+(?:async\s+)?(?:const|function|class|let|var)\s+(\w+)/g)
+      ).map((match) => match[1]),
+      ...Array.from(
+        currentComponent.code.matchAll(/export\s+default\s+(?:async\s+)?(?:function|class)\s+(\w+)/g)
+      ).map((match) => match[1]),
+      ...Array.from(
+        currentComponent.code.matchAll(/export\s+default\s+(?!(?:async\s+)?(?:function|class))(\w+)/g)
+      ).map((match) => match[1]),
+    ].filter((name, index, self) => name && self.indexOf(name) === index);
     
     // Clean up the component code for browser rendering
     const jsxCode = currentComponent.code
@@ -52,6 +62,8 @@ const PreviewCard = ({
       .replace(/export\s+\{[^}]+\}\s*;?/g, '')
       .replace(/export\s+type\s+[^;]+;?/g, '')
       .replace(/export\s+interface\s+[^{]+\{[\s\S]*?\}\s*;?/g, '')
+      .replace(/export\s+(?:async\s+)?(?:const|function|class|let|var)\s+/g, (match) => match.replace('export', ''))
+      .replace(/export\s+default\s+(?:async\s+)?(?:function|class)\s+/g, (match) => match.replace('export default', ''))
       .trim();
     
     return `<!DOCTYPE html>
@@ -122,7 +134,8 @@ const PreviewCard = ({
       min-height: 100vh; 
       display: flex; 
       align-items: center; 
-      justify-content: center; 
+      justify-content: center;
+      background-color: #101010;
     }
   </style>
 </head>
@@ -282,18 +295,20 @@ const PreviewCard = ({
 
     exportedNames.forEach(attachExport);
 
+    // Try to access component by name directly
+    const componentName = ${JSON.stringify(currentComponent.name)};
     try {
-      if (typeof ${currentComponent.name} !== 'undefined') {
-        window['${currentComponent.name}'] = ${currentComponent.name};
-        if (!exportedNames.includes('${currentComponent.name}')) {
-          exportedNames.push('${currentComponent.name}');
+      if (typeof window[componentName] !== 'undefined') {
+        if (!exportedNames.includes(componentName)) {
+          exportedNames.push(componentName);
         }
       }
     } catch (_) {}
 
-    const primaryExportName = exportedNames.includes('${currentComponent.name}')
-      ? '${currentComponent.name}'
-      : (exportedNames.find((name) => /^[A-Z]/.test(name) && !/Variants$/.test(name)) || '${currentComponent.name}');
+    // Find the primary export - prefer the component name, otherwise find first capitalized export
+    const primaryExportName = exportedNames.includes(componentName)
+      ? componentName
+      : (exportedNames.find((name) => /^[A-Z]/.test(name) && !/Variants$/.test(name)) || componentName);
 
     const primaryComponent = window[primaryExportName];
 
@@ -576,7 +591,7 @@ const PreviewCard = ({
       return renderMissing(name);
     };
 
-    const previewElement = renderPreview('${currentComponent.name}');
+    const previewElement = renderPreview(${JSON.stringify(currentComponent.name)});
 
     try {
       const root = ReactDOM.createRoot(document.getElementById('root'));

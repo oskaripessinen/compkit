@@ -30,6 +30,7 @@ export interface Library {
   user_id: string;
   created_at: string;
   description?: string | null;
+  css?: string | null; // Added css field
 }
 
 // Relationship: which components belong to a library snapshot

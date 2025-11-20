@@ -23,10 +23,15 @@ router.post("/components/generate", optionalAuthMiddleware, async (req, res) => 
     
     const result = await AIService.generateComponent(prompt, userId, libraryName);
 
+    // Ensure components are always returned in the correct format
+    const components = result.components && result.components.length > 0 
+      ? result.components 
+      : AIService.parseComponents(result.code);
+    
     res.json({
       success: true,
       code: result.code,
-      components: result.components || AIService.parseComponents(result.code),
+      components,
       css: result.css,
       library: result.library, // Now includes LibraryWithComponents
       model: config.openRouter.model,
